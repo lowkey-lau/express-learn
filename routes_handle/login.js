@@ -1,8 +1,10 @@
 const db = require('../db/index')
-const bcrypt = require('bcrypt')
+const bcrypt = require('bcryptjs')
+const jwt = require('jsonwebtoken')
+const jwtConfig = require('../jwt_config/index')
 
 exports.register = (req, res) => {
-    const regInfo = req.query;
+    const regInfo = req.body;
 
     if (!regInfo.account || !regInfo.password) {
         return res.send({
@@ -14,7 +16,6 @@ exports.register = (req, res) => {
     const sql = 'select * from users where account = ?';
 
     db.query(sql, regInfo.account, (err, results) => {
-        console.log(results)
 
         if (results.length > 0) {
             return res.send({
@@ -37,7 +38,7 @@ exports.register = (req, res) => {
             identity,
             create_time,
             status: 0
-        }, (err, results => {
+        }, (err, results) => {
             if (results.affectedRows !== 1) {
                 return res.send({
                     status: 1,
@@ -45,14 +46,64 @@ exports.register = (req, res) => {
                 })
             }
 
-            res.send({
+            return res.send({
                 status: 0,
                 message: '注册成功'
             })
-        }))
+        })
     })
 }
 
 exports.login = (req, res) => {
-    res.send('登陆')
+    const logInfo = req.body;
+
+    const sql = 'select * from users where account = ?'
+
+    db.query(sql, logInfo.account, (err, results) => {
+
+        if (err) {
+            return res.send({
+                status: 1,
+                message: err
+            })
+        }
+        if (results.length <= 0) {
+            return res.send({
+                status: 1,
+                message: '登陆失败'
+            })
+        }
+        
+        const compareResult = bcrypt.compareSync(logInfo.password, results[0].password)
+
+        if (!compareResult) {
+            return res.send({
+                status: 1,
+                message: '密码不正确'
+            })
+        }
+
+        if (results.status == 1) {
+            return res.send({
+                status: 1,
+                message: '账号被冻结'
+            })
+        }
+
+        const user = {
+            ...results[0],
+        }
+
+        console.log(jwtConfig.jwtSecretKey)
+
+        const tokenStr = jwt.sign(user, jwtConfig.jwtSecretKey)
+
+        res.send({
+            data: results[0],
+            token: tokenStr,
+            status: 0,
+            message: '登录成功'
+        })
+
+    })
 }

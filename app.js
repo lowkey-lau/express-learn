@@ -30,8 +30,26 @@ app.use(cors())
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json())
 
+const jwtConfig = require('./jwt_config/index.js')
+const { expressjwt: jwt } = require('express-jwt');
+app.use(jwt({
+  secret: jwtConfig.jwtSecretKey, algorithms: ['HS256']
+}).unless({
+  path: [/^\/api\//]
+}))
+
+// app.use(function(req, res, next){
+//   res.cc = (err, status = 1) => {
+//     res.send({
+//       status,
+//       message: err instanceof Error ? err.message : err
+//     })
+//   }
+//   next()
+// });
+
 // catch 404 and forward to error handler
-app.use(function(req, res, next) {
+app.use(function (req, res, next) {
   next(createError(404));
 });
 
