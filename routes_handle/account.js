@@ -6,23 +6,13 @@ const jwtConfig = require('../jwt_config/index')
 exports.register = (req, res) => {
     const regInfo = req.body;
 
-    if (!regInfo.account || !regInfo.password) {
-        return res.send({
-            status: 1,
-            message: '账号或者密码不能为空'
-        })
-    }
+    if (!regInfo.account || !regInfo.password) return res.cc('账号或者密码不能为空')
 
     const sql = 'select * from users where account = ?';
 
     db.query(sql, regInfo.account, (err, results) => {
 
-        if (results.length > 0) {
-            return res.send({
-                status: 1,
-                message: '账号已存在'
-            })
-        }
+        if (results.length > 0) return res.cc('账号已存在')
 
         regInfo.password = bcrypt.hashSync(regInfo.password, 10);
 
@@ -39,12 +29,7 @@ exports.register = (req, res) => {
             create_time,
             status: 0
         }, (err, results) => {
-            if (results.affectedRows !== 1) {
-                return res.send({
-                    status: 1,
-                    message: '注册失败'
-                })
-            }
+            if (results.affectedRows !== 1) return res.cc('注册失败')
 
             return res.send({
                 status: 0,
@@ -84,5 +69,36 @@ exports.login = (req, res, next) => {
             message: '登录成功'
         })
 
+    })
+}
+
+exports.delete = (req, res, next) => {
+    const info = req.body;
+
+    const sql_select = 'select * from users where account = ?'
+
+    db.query(sql_select, info.account, (err, results) => {
+
+        if (err) return res.cc(err)
+        
+        if (results.length <= 0) return res.cc('找不到该用户')
+        
+        const compareResult = bcrypt.compareSync(info.password, results[0].password)
+
+        if (!compareResult) return res.cc('密码不正确')
+
+        const sql_delete = 'delete from users where account = ?'
+
+        db.query(sql_delete, info.account, (err, results) => {
+
+            if (err) return res.cc(err)
+            
+            // if (results.affectedRows !== 1) return res.cc('删除失败')
+            
+            res.send({
+                status: 0,
+                message: '删除成功'
+            })
+        })
     })
 }
