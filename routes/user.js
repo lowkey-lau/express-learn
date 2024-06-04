@@ -5,5 +5,6 @@ const router = express.Router();
 const userHandle = require('../routes_handle/user')
 
 router.post('/upload_avatar',  userHandle.uploadAvatar)
+router.post('/bind_account',  userHandle.bindAccount)
 
 module.exports = router

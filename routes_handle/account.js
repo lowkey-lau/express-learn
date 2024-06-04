@@ -93,7 +93,7 @@ exports.delete = (req, res, next) => {
 
             if (err) return res.cc(err)
             
-            // if (results.affectedRows !== 1) return res.cc('删除失败')
+            if (results.affectedRows !== 1) return res.cc('删除失败')
             
             res.send({
                 status: 0,

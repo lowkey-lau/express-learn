@@ -32,3 +32,26 @@ exports.uploadAvatar = (req, res) => {
 
     // res.send('我再上传图片')
 }
+
+exports.bindAccount = (req, res) => {
+    const { account, onlyId, url } = req.body;
+
+    const sql_update = 'update images set account = ? where onlyId = ?'
+
+    db.query(sql_update, [account, onlyId], (err, result) => {
+        if (err) return res.cc(err);
+
+        if (result.affectedRows == 1) {
+            const sql_select = 'update users set image_url = ? where account = ?'
+            
+            db.query(sql_select, [url, account], (err, result) => {
+                if (err) return res.cc(err);
+
+                res.send({
+                    status: 0,
+                    message: '修改成功'
+                })
+            })
+        }
+    })
+} 
