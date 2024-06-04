@@ -54,47 +54,26 @@ exports.register = (req, res) => {
     })
 }
 
-exports.login = (req, res) => {
+exports.login = (req, res, next) => {
     const logInfo = req.body;
 
     const sql = 'select * from users where account = ?'
 
     db.query(sql, logInfo.account, (err, results) => {
 
-        if (err) {
-            return res.send({
-                status: 1,
-                message: err
-            })
-        }
-        if (results.length <= 0) {
-            return res.send({
-                status: 1,
-                message: '登陆失败'
-            })
-        }
+        if (err) res.cc(err)
+        
+        if (results.length <= 0) res.cc('找不到该用户')
         
         const compareResult = bcrypt.compareSync(logInfo.password, results[0].password)
 
-        if (!compareResult) {
-            return res.send({
-                status: 1,
-                message: '密码不正确'
-            })
-        }
+        if (!compareResult) return res.cc('密码不正确')
 
-        if (results.status == 1) {
-            return res.send({
-                status: 1,
-                message: '账号被冻结'
-            })
-        }
+        if (results.status == 1) res.cc('账号被冻结')
 
         const user = {
             ...results[0],
         }
-
-        console.log(jwtConfig.jwtSecretKey)
 
         const tokenStr = jwt.sign(user, jwtConfig.jwtSecretKey)
 

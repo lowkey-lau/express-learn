@@ -22,13 +22,19 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/', indexRouter);
-app.use('/users', usersRouter);
-app.use('/api', loginRouter);
-
 app.use(cors())
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json())
+
+app.use(function(req, res, next){
+  res.cc = (err, status = 1) => {
+    res.send({
+      status,
+      message: err instanceof Error ? err.message : err
+    })
+  }
+  next()
+});
 
 const jwtConfig = require('./jwt_config/index.js')
 const { expressjwt: jwt } = require('express-jwt');
@@ -38,15 +44,9 @@ app.use(jwt({
   path: [/^\/api\//]
 }))
 
-// app.use(function(req, res, next){
-//   res.cc = (err, status = 1) => {
-//     res.send({
-//       status,
-//       message: err instanceof Error ? err.message : err
-//     })
-//   }
-//   next()
-// });
+app.use('/', indexRouter);
+app.use('/users', usersRouter);
+app.use('/api', loginRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
