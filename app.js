@@ -26,7 +26,7 @@ app.use(cors())
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json())
 
-app.use(function(req, res, next){
+app.use((req, res, next) =>{
   res.cc = (err, status = 1) => {
     res.send({
       status,
@@ -38,6 +38,7 @@ app.use(function(req, res, next){
 
 const jwtConfig = require('./jwt_config/index.js')
 const { expressjwt: jwt } = require('express-jwt');
+const Joi = require('joi');
 app.use(jwt({
   secret: jwtConfig.jwtSecretKey, algorithms: ['HS256']
 }).unless({
@@ -47,6 +48,10 @@ app.use(jwt({
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/api', loginRouter);
+
+app.use((err, req, res, next)=>{
+  if(err instanceof Joi.ValidationError) return res.cc(err)
+});
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
