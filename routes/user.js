@@ -4,7 +4,9 @@ const router = express.Router();
 
 const userHandle = require('../routes_handle/user')
 
-router.post('/upload_avatar',  userHandle.uploadAvatar)
-router.post('/bind_account',  userHandle.bindAccount)
+router.post('/uploadAvatar',  userHandle.uploadAvatar)
+router.post('/bindAccount',  userHandle.bindAccount)
+router.post('/getUserList',  userHandle.getUserList)
+router.post('/getUserInfo',  userHandle.getUserInfo)
 
 module.exports = router

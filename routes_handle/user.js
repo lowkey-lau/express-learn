@@ -1,7 +1,4 @@
 const db = require('../db/index')
-// const bcrypt = require('bcryptjs')
-// const jwt = require('jsonwebtoken')
-// const jwtConfig = require('../jwt_config/index')
 
 const crypto = require('crypto');
 const fs = require('fs')
@@ -27,10 +24,6 @@ exports.uploadAvatar = (req, res) => {
             url: 'http://127.0.0.1:3007/upload/' + newName
         })
     })
-
-    // console.log(req.body.file[0])
-
-    // res.send('我再上传图片')
 }
 
 exports.bindAccount = (req, res) => {
@@ -54,4 +47,43 @@ exports.bindAccount = (req, res) => {
             })
         }
     })
-} 
+}
+
+exports.getUserList = (req, res) => {
+    const {pageNum = 1, pageSize = 20} = req.body;
+
+    const sql_select = `select * from users order by id ASC limit ${pageSize} offset ${(pageNum - 1) * pageSize}`
+
+    db.query(sql_select, '', (err, result) => {
+        if (err) return res.cc(err);
+
+        db.query('SELECT COUNT(*) FROM users', (err, count) => {
+        if (err) return res.cc(err);
+            res.send({
+                total: count[0]['COUNT(*)'],
+                pageNum,
+                pageSize,
+                list: result,
+                status: 0
+            })
+        });
+
+    })
+}
+
+exports.getUserInfo = (req, res) => {
+    const info = req.body;
+
+    const sql_select = 'select * from users where account = ?'
+
+    db.query(sql_select, info.account, (err, result) => {
+        if (err) return res.cc(err);
+
+        if (result.length == 0) return res.cc('未找到用户')
+        
+        res.send({
+            data: result[0],
+            status: 0
+        })
+    })
+}
