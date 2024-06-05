@@ -20,7 +20,7 @@ exports.uploadAvatar = (req, res) => {
 
         res.send({
             onlyId,
-            status: 0,
+            code: 0,
             url: 'http://127.0.0.1:3007/upload/' + newName
         })
     })
@@ -41,8 +41,8 @@ exports.bindAccount = (req, res) => {
                 if (err) return res.cc(err);
 
                 res.send({
-                    status: 0,
-                    message: '修改成功'
+                    code: 0,
+                    msg: '修改成功'
                 })
             })
         }
@@ -60,11 +60,13 @@ exports.getUserList = (req, res) => {
         db.query('SELECT COUNT(*) FROM users', (err, count) => {
         if (err) return res.cc(err);
             res.send({
-                total: count[0]['COUNT(*)'],
-                pageNum,
-                pageSize,
-                list: result,
-                status: 0
+                data: {
+                    total: count[0]['COUNT(*)'],
+                    pageNum,
+                    pageSize,
+                    list: result
+                },
+                code: 0
             })
         });
 
@@ -83,7 +85,25 @@ exports.getUserInfo = (req, res) => {
         
         res.send({
             data: result[0],
-            status: 0
+            code: 0
+        })
+    })
+}
+
+exports.deleteAccount = (req, res, next) => {
+    const info = req.body;
+
+    const sql_delete = 'delete from users where account = ?'
+
+    db.query(sql_delete, info.account, (err, results) => {
+
+        if (err) return res.cc(err)
+        
+        if (results.affectedRows !== 1) return res.cc('删除失败')
+        
+        res.send({
+            code: 0,
+            msg: '删除成功'
         })
     })
 }

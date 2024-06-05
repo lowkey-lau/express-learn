@@ -11,9 +11,12 @@ const account = joi.string().alphanum().min(6).max(12).required()
 
 const password = joi.string().pattern(/^(?![0-9]+$)[a-z0-9]{1,50}$/).min(6).max(12).required()
 
-exports.account_limit = {
+exports.register_limit = {
     body: {
-        account,
-        password
-    }
+        account: joi.required(),
+        password: joi.required(),
+        nickname: joi.required(),
+        email: joi.required(),
+        sex: joi.required().allow(0, 1),
+    },
 }

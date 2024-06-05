@@ -35,10 +35,10 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json())
 
 app.use((req, res, next) =>{
-  res.cc = (err, status = 1) => {
+  res.cc = (err, code = 1) => {
     res.send({
-      status,
-      message: err instanceof Error ? err.message : err
+      code,
+      msg: err instanceof Error ? err.message : err
     })
   }
   next()
