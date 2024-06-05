@@ -24,10 +24,7 @@ app.use(cookieParser());
 
 app.use(cors())
 
-const multer = require('multer');
-const upload = multer({ dest: './public/upload' })
-
-app.use(upload.any())
+// app.use(upload.any())
 app.use(express.static('./public'))
 // app.use(express.static(path.join(__dirname, 'public')));
 
