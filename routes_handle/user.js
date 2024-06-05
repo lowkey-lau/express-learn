@@ -3,27 +3,37 @@ const db = require('../db/index')
 const crypto = require('crypto');
 const fs = require('fs')
 
-exports.uploadAvatar = (req, res) => {
+
+const sqlQuery = (sqlStr, option) => {
+    return new Promise((resolve, reject) => {
+        db.query(sqlStr, option, (err, res) => { 
+            if (err) reject(err);
+            resolve(res)
+        })
+    })
+}
+
+exports.uploadAvatar = async (req, res) => {
     const onlyId = crypto.randomUUID();
     let oldName = req.files[0].filename;
     let newName = Buffer.from(req.files[0].originalname, 'latin1').toString('utf8');
     
     fs.renameSync('./public/upload/' + oldName, './public/upload/' + newName);
 
-    const sql_inset = 'insert into images set ?';
-
-    db.query(sql_inset, {
-        image_url: `http://127.0.0.1:3007/upload/${newName}`,
-        onlyId
-    }, (err, result) => {
-        if (err) return res.cc(err);
+    try {
+        await sqlQuery('insert into images set ?', {
+            image_url: `http://127.0.0.1:3007/upload/${newName}`,
+            onlyId
+        })
 
         res.send({
             onlyId,
             code: 0,
             url: 'http://127.0.0.1:3007/upload/' + newName
         })
-    })
+    } catch (error) {
+        res.cc(error)
+    }
 }
 
 exports.bindAccount = (req, res) => {
@@ -88,6 +98,70 @@ exports.getUserInfo = (req, res) => {
             code: 0
         })
     })
+}
+
+exports.updateUserInfo = async (req, res) => {
+    const info = req.body;
+    
+    const update_time = new Date();
+    
+
+    db.query('BEGIN TRAN');
+
+    try {
+        const selectUserRes = await sqlQuery('select * from users where account = ?', info.account)
+
+        if (selectUserRes.length == 0) return res.cc('账号不存在')
+
+        const updateUserRes = await sqlQuery('update users set ? where account = ?', [{ 
+            nickname: info.nickname,
+            email: info.email,
+            sex: info.sex,
+            update_time,
+        }, info.account])
+        if (updateUserRes.affectedRows !== 1) {
+            db.query('ROLLBACK TRAN')
+            return res.cc('修改失败')
+        }
+
+
+        if (req.files.length != 0) {
+            const onlyId = crypto.randomUUID();
+            const oldName = req.files[0].filename;
+            const newName = Buffer.from(req.files[0].originalname, 'latin1').toString('utf8');
+            fs.renameSync('./public/upload/' + oldName, './public/upload/' + newName);
+            const image_url = `http://127.0.0.1:3007/upload/${newName}`
+        
+            const insertImgRes = await sqlQuery('insert into images set ?', {
+                image_url,
+                onlyId
+            })
+            if (insertImgRes.affectedRows !== 1) {
+                db.query('ROLLBACK TRAN')
+                return res.cc('修改失败')
+            } else {
+                await sqlQuery('update users set image_url = ? where account = ?', [image_url, info.account])
+
+                db.query('COMMIT')
+
+                res.send({
+                    status: 0,
+                    msg: '修改成功'
+                })
+            }
+
+        } else {
+        
+            db.query('COMMIT')
+            res.send({
+                status: 0,
+                msg: '修改成功'
+            })
+        }
+    } catch (error) {
+        db.query('ROLLBACK TRAN')
+        return res.cc(error)
+    }
 }
 
 exports.deleteAccount = (req, res, next) => {

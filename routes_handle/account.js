@@ -14,7 +14,6 @@ const sqlQuery = (sqlStr, option) => {
     })
 }
 
-
 exports.register = async (req, res) => {
     const info = req.body;
     const bcryptPwd = bcrypt.hashSync(info.password, 10);
@@ -69,99 +68,10 @@ exports.register = async (req, res) => {
         db.query('ROLLBACK TRAN')
         return res.cc(error)
     }
-
-    
-
-
-    // const sql = 'select * from users where account = ?';
-    // db.query(sql, info.account, (err, results) => {
-    //     if (err) return res.cc(err);
-    //     if (results.length > 0) return res.cc('账号已存在')
-        
-    //     info.password = bcrypt.hashSync(info.password, 10);
-
-        
-    //     const create_time = new Date();
-        
-    //     const sql_inset_acccount = 'insert into users set ?';
-        
-    //     db.query(sql_inset_acccount, { 
-    //         account: info.account,
-    //         password: info.password,
-    //         nickname: info.nickname,
-    //         email: info.email,
-    //         sex: info.sex,
-    //         identity: '用户',
-    //         identityId: 0,
-    //         create_time,
-    //         update_time: create_time,
-    //         status: 0
-    //     }, (err, results) => {
-    //         if (err) {
-    //             db.query('ROLLBACK TRAN')
-    //             return res.cc(err)
-    //         };
-    //         if (results.affectedRows !== 1) {
-    //             db.query('ROLLBACK TRAN')
-    //             return res.cc('注册失败')
-    //         }
-            
-    //         const onlyId = crypto.randomUUID();
-
-    //         let oldName = req.files[0].filename;
-    //         let newName = Buffer.from(req.files[0].originalname, 'latin1').toString('utf8');
-    //         fs.renameSync('./public/upload/' + oldName, './public/upload/' + newName);
-
-    //         const sql_inset_img = 'insert into images set ?';
-
-    //         const url = `http://127.0.0.1:3007/upload/${newName}`
-
-    //         db.query(sql_inset_img, {
-    //             image_url: `http://127.0.0.1:3007/upload/${newName}`,
-    //             onlyId
-    //         }, (err, result) => {
-    //             if (err) {
-    //                 db.query('ROLLBACK TRAN')
-    //                 return res.cc(err)
-    //             };
-
-    //             const sql_update = 'update images set account = ? where onlyId = ?'
-    //             db.query(sql_update, [info.account, onlyId], (err, result) => {
-    //                 if (err) {
-    //                     db.query('ROLLBACK TRAN')
-    //                     return res.cc(err)
-    //                 };
-
-    //                 if (result.affectedRows == 1) {
-    //                     const sql_select = 'update users set image_url = ? where account = ?'
-    //                         console.log(123)
-                        
-    //                     db.query(sql_select, [url, info.account], (err, result) => {
-    //                         if (err) {
-    //                             db.query('ROLLBACK TRAN')
-    //                             return res.cc(err)
-    //                         };
-
-    //                         db.query('COMMIT')
-
-    //                         res.send({
-    //                             status: 0,
-    //                             msg: '注册成功'
-    //                         })
-    //                     })
-    //                 } else {
-    //                     db.query('ROLLBACK TRAN')
-    //                 }
-    //             })
-    //         })
-    //     })
-    // })
 }
 
 exports.login = (req, res, next) => {
     const info = req.body;
-
-    console.log(info)
 
     const sql = 'select * from users where account = ?'
 
