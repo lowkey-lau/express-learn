@@ -18,5 +18,6 @@ const {
 router.post('/register',  upload.any(), expressJoi(register_limit), accountHandle.register)
 router.post('/login',  accountHandle.login)
 router.post('/delete',  accountHandle.delete)
+router.post('/test',  accountHandle.test)
 
 module.exports = router;

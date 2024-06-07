@@ -165,12 +165,9 @@ exports.updateUserInfo = async (req, res) => {
 }
 
 exports.deleteAccount = (req, res, next) => {
-    const info = req.body;
-
     const sql_delete = 'delete from users where account = ?'
 
-    db.query(sql_delete, info.account, (err, results) => {
-
+    db.query(sql_delete, req.body.account, (err, results) => {
         if (err) return res.cc(err)
         
         if (results.affectedRows !== 1) return res.cc('删除失败')
