@@ -11,11 +11,11 @@ var usersRouter = require('./routes/users');
 var accountRouter = require('./routes/account');
 var userRouter = require('./routes/user');
 
-var app = express();
 
+var app = express();
 // view engine setup
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'jade');
+// app.set('views', path.join(__dirname, 'views'));
+// app.set('view engine', 'jade');
 
 app.use(logger('dev'));
 app.use(express.json());
@@ -50,6 +50,10 @@ const Joi = require('joi');
 //   path: [/^\/api\//]
 // }))
 
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
+
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/api/account', accountRouter);
@@ -76,8 +80,8 @@ app.use(function(err, req, res, next) {
 });
 
 
-app.listen(3007, () => {
-  console.log('this run at 3007')
-})
+// app.listen(3007, () => {
+//   console.log('this run at 3007')
+// })
 
 module.exports = app;
