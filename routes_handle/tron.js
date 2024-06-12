@@ -101,3 +101,13 @@ exports.sendAddressTransaction = async (req, res) => {
     data: resData,
   });
 };
+
+exports.getTransactionList = async (req, res) => {
+  const tronApi = new Tron_helper();
+  const resData = await tronApi.GetTransactionList(req.body.address);
+  console.log(resData);
+  res.send({
+    code: 0,
+    data: resData,
+  });
+};

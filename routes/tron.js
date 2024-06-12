@@ -14,5 +14,6 @@ router.post("/getTransactionInfoByBlockNum", tronHandle.getTransactionInfoByBloc
 router.post("/getNowBlock", tronHandle.getNowBlock);
 router.post("/sendTransaction", tronHandle.sendTransaction);
 router.post("/sendAddressTransaction", tronHandle.sendAddressTransaction);
+router.post("/getTransactionList", tronHandle.getTransactionList);
 
 module.exports = router;
