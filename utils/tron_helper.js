@@ -1,16 +1,18 @@
 const sdk = require("@api/tron");
-const API_KEY = "96848c40-7cf5-4011-a930-05d2a09e5aab";
-
+const fetch = require("node-fetch");
 const TronWeb = require("tronweb");
 
+const API_KEY = "96848c40-7cf5-4011-a930-05d2a09e5aab";
+const REQUEST_NET = "https://nile.trongrid.io";
 class Tron_helper {
   tronWeb;
 
   constructor() {
     address: "";
+    blockConfirmQuantity: 10;
 
     this.tronWeb = new TronWeb({
-      fullHost: "https://api.shasta.trongrid.io",
+      fullHost: "https://nile.trongrid.io",
       headers: { "TRON-PRO-API-KEY": API_KEY },
     });
   }
@@ -31,59 +33,79 @@ class Tron_helper {
   };
 
   //验证输入地址是否规范
-  Validateaddress(address = "TZ4UXDV5ZhNW7fb2AMSbgfAEZ7hWsnYS2g") {
-    return new Promise((resolve, reject) => {
-      sdk
-        .validateaddress({ address, visible: true })
-        .then(({ data }) => {
-          if (data.result) {
-            resolve(data);
-          }
+  Validateaddress = async (address = "TXpQpC14yYKbjdmXR5W6p3vLsrAn4MwXzn") => {
+    const url = `${REQUEST_NET}/wallet/validateaddress`;
+    return await fetchFun(url, { address });
+  };
 
-          reject(data);
-        })
-        .catch((err) => reject(err));
-    });
-  }
+  GetBalance = async (address = "TXpQpC14yYKbjdmXR5W6p3vLsrAn4MwXzn") => {
+    try {
+      const url = `${REQUEST_NET}/wallet/getaccount`;
+      let res = await fetchFun(url, { address });
+      const balance = Number(this.tronWeb.fromSun(res.balance));
+      console.log(res.balance);
+      console.log(balance);
+      return balance;
+    } catch (error) {
+      console.error("获取TRC余额出错:", error);
+    }
+  };
 
-  //获取用户
-  GetAccount(address = "TZ4UXDV5ZhNW7fb2AMSbgfAEZ7hWsnYS2g") {
-    return new Promise((resolve, reject) => {
-      sdk
-        .accountGetaccount({ address, visible: true })
-        .then(({ data }) => resolve(data.address))
-        .catch((err) => reject(err));
-    });
-  }
+  GetAddressBalance = async (contractAddress = "TG3XXyExBkPp9nzdajDZsozEu4BkaSJozs", address = "TXpQpC14yYKbjdmXR5W6p3vLsrAn4MwXzn") => {
+    this.tronWeb.setAddress(address);
 
-  GetBalance(address = "TZ4UXDV5ZhNW7fb2AMSbgfAEZ7hWsnYS2g") {
-    return new Promise((resolve, reject) => {
-      sdk
-        .accountGetaccount({ address, visible: true })
-        .then(({ data }) => resolve(data.balance))
-        .catch((err) => reject(err));
-    });
-  }
+    try {
+      const { abi } = await this.tronWeb.trx.getContract(contractAddress);
 
-  GetTransactionInfoById(value = "8d1f8cc67cb3797a19e93c7bfdc90434a4c63d9301d47745e8f668aa4ef24bb8") {
-    return new Promise((resolve, reject) => {
-      sdk
-        .gettransactioninfobyid1({ value })
-        .then(({ data }) => resolve(data))
-        .catch((err) => console.error(err));
-    });
-  }
+      // 获取USDT合约实例
+      const usdtContract = await this.tronWeb.contract(abi.entrys, contractAddress);
 
-  GetTransactionInfoByBlockNum(num = "44842895") {
-    return new Promise((resolve, reject) => {
-      sdk
-        .gettransactioninfobyblocknum1({ num })
-        .then(({ data }) => resolve(data))
-        .catch((err) => console.error(err));
-    });
-  }
+      // 调用USDT合约的balanceOf方法获取余额
+      let balance = await usdtContract.methods.balanceOf(address).call();
+
+      // 格式化余额为USDT数值
+      let usdtBalance = this.tronWeb.toDecimal(this.tronWeb.fromSun(balance));
+
+      console.log(`USDT余额: ${balance}`);
+      console.log(`USDT格式化余额: ${usdtBalance}`);
+
+      return usdtBalance;
+    } catch (error) {
+      console.error("获取USDT余额出错:", error);
+    }
+  };
+
+  GetTransactionInfoById = async (value = "921cb9f044ab87e8c38870db9dece424a9e7f6c2c1e2159645ff6322cf49e391") => {
+    const url = `${REQUEST_NET}/wallet/gettransactioninfobyid`;
+    return await fetchFun(url, { value });
+  };
+
+  GetTransactionInfoByBlockNum = async (num = 44870674) => {
+    const url = `${REQUEST_NET}/wallet/gettransactioninfobyblocknum`;
+    return await fetchFun(url, { num: Number(num) });
+  };
+
+  GetNowBlock = async () => {
+    const url = `${REQUEST_NET}/wallet/getnowblock`;
+    return await fetchFun(url);
+  };
 }
 
 module.exports = {
   Tron_helper,
+};
+
+const fetchFun = (url, params = {}) => {
+  return new Promise((resolve, reject) => {
+    const options = {
+      method: "POST",
+      headers: { accept: "application/json", "content-type": "application/json" },
+      body: JSON.stringify({ ...params, visible: true }),
+    };
+
+    fetch(url, options)
+      .then((res) => res.json())
+      .then((json) => resolve(json))
+      .catch((err) => reject("error:" + err));
+  });
 };
