@@ -12,5 +12,7 @@ router.post("/getAddressBalance", tronHandle.getAddressBalance);
 router.post("/getTransactionInfoById", tronHandle.getTransactionInfoById);
 router.post("/getTransactionInfoByBlockNum", tronHandle.getTransactionInfoByBlockNum);
 router.post("/getNowBlock", tronHandle.getNowBlock);
+router.post("/sendTransaction", tronHandle.sendTransaction);
+router.post("/sendAddressTransaction", tronHandle.sendAddressTransaction);
 
 module.exports = router;

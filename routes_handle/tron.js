@@ -81,3 +81,23 @@ exports.getNowBlock = async (req, res) => {
     data: await tronApi.GetNowBlock(req.body.blockNum),
   });
 };
+
+exports.sendTransaction = async (req, res) => {
+  const tronApi = new Tron_helper();
+  const resData = await tronApi.SendTransaction(req.body.privateKey, req.body.toAddress, req.body.quantity);
+  console.log(resData);
+  res.send({
+    code: 0,
+    data: resData,
+  });
+};
+
+exports.sendAddressTransaction = async (req, res) => {
+  const tronApi = new Tron_helper();
+  const resData = await tronApi.SendAddressTransaction(req.body.privateKey, req.body.contractAddress, req.body.toAddress, req.body.quantity);
+  console.log(resData);
+  res.send({
+    code: 0,
+    data: resData,
+  });
+};

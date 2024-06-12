@@ -76,18 +76,37 @@ class Tron_helper {
   };
 
   GetTransactionInfoById = async (value = "921cb9f044ab87e8c38870db9dece424a9e7f6c2c1e2159645ff6322cf49e391") => {
-    const url = `${REQUEST_NET}/wallet/gettransactioninfobyid`;
-    return await fetchFun(url, { value });
+    return this.tronWeb.trx.getTransaction(value);
   };
 
   GetTransactionInfoByBlockNum = async (num = 44870674) => {
-    const url = `${REQUEST_NET}/wallet/gettransactioninfobyblocknum`;
-    return await fetchFun(url, { num: Number(num) });
+    return this.tronWeb.trx.getBlock(num);
   };
 
   GetNowBlock = async () => {
     const url = `${REQUEST_NET}/wallet/getnowblock`;
     return await fetchFun(url);
+  };
+
+  SendTransaction = async (privateKey, toAddress, quantity) => {
+    this.tronWeb.setPrivateKey(privateKey);
+    return this.tronWeb.trx.sendTransaction(toAddress, this.tronWeb.toSun(quantity), privateKey);
+  };
+
+  SendAddressTransaction = async (privateKey, contractAddress, toAddress, quantity) => {
+    this.tronWeb.setPrivateKey(privateKey);
+    try {
+      const { abi } = await this.tronWeb.trx.getContract(contractAddress);
+      // 获取USDT合约实例
+      const usdtContract = await this.tronWeb.contract(abi.entrys, contractAddress);
+
+      // 调用USDT合约Transfer方法
+      let result = await usdtContract.methods.transfer(toAddress, this.tronWeb.toSun(quantity)).send();
+
+      return this.tronWeb.trx.getTransaction(result);
+    } catch (error) {
+      console.log(error);
+    }
   };
 }
 
