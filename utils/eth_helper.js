@@ -109,7 +109,7 @@ class Eth_helper {
   //   }
   // };
 
-  // GetTransactionInfoById = async (value = "921cb9f044ab87e8c38870db9dece424a9e7f6c2c1e2159645ff6322cf49e391") => {
+  // GetTransactionById = async (value = "921cb9f044ab87e8c38870db9dece424a9e7f6c2c1e2159645ff6322cf49e391") => {
   //   return this.tronWeb.trx.getTransaction(value);
   // };
 

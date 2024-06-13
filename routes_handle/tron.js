@@ -60,7 +60,7 @@ exports.getTransactionInfoById = async (req, res) => {
 
   res.send({
     code: 0,
-    data: await tronApi.GetTransactionInfoById(req.body.hxID),
+    data: await tronApi.GetTransactionById(req.body.hxID),
   });
 };
 

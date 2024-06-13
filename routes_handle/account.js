@@ -4,6 +4,7 @@ const jwt = require("jsonwebtoken");
 const jwtConfig = require("../jwt_config/index");
 const crypto = require("crypto");
 const fs = require("fs");
+const { Tron_helper } = require("../utils/tron_helper");
 
 const sqlQuery = (sqlStr, option) => {
   return new Promise((resolve, reject) => {
@@ -119,6 +120,7 @@ function transaction(sqls, params) {
 }
 
 exports.register = async (req, res) => {
+  const tron_helper = new Tron_helper();
   const info = req.body;
   const bcryptPwd = bcrypt.hashSync(info.password, 10);
   const create_time = new Date();
@@ -127,15 +129,24 @@ exports.register = async (req, res) => {
   const newName = Buffer.from(req.files[0].originalname, "latin1").toString("utf8");
   fs.renameSync("./public/upload/" + oldName, "./public/upload/" + newName);
   const image_url = `http://127.0.0.1:3007/upload/${newName}`;
+  const addressInfo = await tron_helper.CreateAccount();
 
-  db.query("BEGIN TRAN");
+  console.log(addressInfo);
 
-  try {
-    const selectUserRes = await sqlQuery("select * from users_info  where account = ?", info.account);
-
-    if (selectUserRes.length > 0) return res.cc("账号已存在");
-
-    const insertUserRes = await sqlQuery("insert into users_info  set ?", {
+  const sqls = [
+    // "insert into goods set ?", // 删除 语句
+    // "delete from goods where goods_id = ?", // 删除 语句
+    "select * from users_info where account = ?", // 查询是否有此账户
+    "insert into users_info set ?",
+    "insert into users_address_tron set ?",
+    "insert into users_avatar set ?",
+    "update users_info set image_url = ? where account = ?",
+  ];
+  const params = [
+    // {'num': Math.random()}, // parmas 是数组格式 与sqls里的sql语句里 ? 一一对应
+    // [1],
+    [info.account],
+    {
       account: info.account,
       password: bcryptPwd,
       nickname: info.nickname,
@@ -146,38 +157,85 @@ exports.register = async (req, res) => {
       create_time,
       update_time: create_time,
       status: 0,
-    });
-    if (insertUserRes.affectedRows !== 1) {
-      db.query("ROLLBACK TRAN");
-      return res.cc("注册失败");
-    }
-    const insertImgRes = await sqlQuery("insert into users_info _avatar set ?", {
+    },
+    {
+      account: info.account,
+      address: addressInfo.address,
+      mnemonic: addressInfo.mnemonic.phrase,
+      private_key: addressInfo.privateKey.slice(2),
+      create_time,
+    },
+    {
       image_url,
       onlyId,
-    });
-    if (insertImgRes.affectedRows !== 1) {
-      db.query("ROLLBACK TRAN");
-      return res.cc("注册失败");
-    } else {
-      await sqlQuery("update users_info  set image_url = ? where account = ?", [image_url, info.account]);
+    },
+    [image_url, info.account],
+  ];
 
-      db.query("COMMIT");
-
+  transaction(sqls, params)
+    .then((arrResult) => {
+      // do anything ....
+      console.log(arrResult);
       res.send({
         status: 0,
         msg: "注册成功",
       });
-    }
-  } catch (error) {
-    db.query("ROLLBACK TRAN");
-    return res.cc(error);
-  }
+    })
+    .catch((err) => {
+      // error
+      console.log(err);
+    });
+
+  // db.query("BEGIN TRAN");
+
+  // try {
+  //   const selectUserRes = await sqlQuery("select * from users_info where account = ?", info.account);
+
+  //   if (selectUserRes.length > 0) return res.cc("账号已存在");
+
+  //   const insertUserRes = await sqlQuery("insert into users_info set ?", {
+  //     account: info.account,
+  //     password: bcryptPwd,
+  //     nickname: info.nickname,
+  //     email: info.email,
+  //     sex: info.sex,
+  //     identity: "用户",
+  //     identityId: 0,
+  //     create_time,
+  //     update_time: create_time,
+  //     status: 0,
+  //   });
+  //   if (insertUserRes.affectedRows !== 1) {
+  //     db.query("ROLLBACK TRAN");
+  //     return res.cc("注册失败");
+  //   }
+  //   const insertImgRes = await sqlQuery("insert into users_avatar set ?", {
+  //     image_url,
+  //     onlyId,
+  //   });
+  //   if (insertImgRes.affectedRows !== 1) {
+  //     db.query("ROLLBACK TRAN");
+  //     return res.cc("注册失败");
+  //   } else {
+  //     await sqlQuery("update users_info set image_url = ? where account = ?", [image_url, info.account]);
+
+  //     db.query("COMMIT");
+
+  //     res.send({
+  //       status: 0,
+  //       msg: "注册成功",
+  //     });
+  //   }
+  // } catch (error) {
+  //   db.query("ROLLBACK TRAN");
+  //   return res.cc(error);
+  // }
 };
 
 exports.login = (req, res, next) => {
   const info = req.body;
 
-  const sql = "select * from users_info  where account = ?";
+  const sql = "select * from users_info where account = ?";
 
   db.query(sql, info.account, (err, results) => {
     if (err) return res.cc(err);
@@ -209,7 +267,7 @@ exports.login = (req, res, next) => {
 exports.delete = (req, res, next) => {
   const info = req.body;
 
-  const sql_select = "select * from users_info  where account = ?";
+  const sql_select = "select * from users_info where account = ?";
 
   db.query(sql_select, info.account, (err, results) => {
     if (err) return res.cc(err);
@@ -220,7 +278,7 @@ exports.delete = (req, res, next) => {
 
     if (!compareResult) return res.cc("密码不正确");
 
-    const sql_delete = "delete from users_info  where account = ?";
+    const sql_delete = "delete from users_info where account = ?";
 
     db.query(sql_delete, info.account, (err, results) => {
       if (err) return res.cc(err);

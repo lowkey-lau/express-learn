@@ -13,6 +13,7 @@ var indexRouter = require("./routes/index");
 var usersRouter = require("./routes/users");
 var accountRouter = require("./routes/account");
 var userRouter = require("./routes/user");
+var addressRouter = require("./routes/address");
 var tronRouter = require("./routes/tron");
 var ethRouter = require("./routes/eth");
 
@@ -63,6 +64,7 @@ app.use("/", indexRouter);
 app.use("/users", usersRouter);
 app.use("/api/account", accountRouter);
 app.use("/api/user", userRouter);
+app.use("/api/address", addressRouter);
 app.use("/api/tron", tronRouter);
 app.use("/api/eth", ethRouter);
 
@@ -88,6 +90,21 @@ app.use(function (err, req, res, next) {
 
 app.listen(3007, () => {
   console.log("this run at 3007");
+
+  console.log(`
+  ______   ________  ______   _______   ________ 
+ /      \ /        |/      \ /       \ /        |
+/$$$$$$  |$$$$$$$$//$$$$$$  |$$$$$$$  |$$$$$$$$/ 
+$$ \__$$/    $$ |  $$ |__$$ |$$ |__$$ |   $$ |   
+$$      \    $$ |  $$    $$ |$$    $$<    $$ |   
+ $$$$$$  |   $$ |  $$$$$$$$ |$$$$$$$  |   $$ |   
+/  \__$$ |   $$ |  $$ |  $$ |$$ |  $$ |   $$ |   
+$$    $$/    $$ |  $$ |  $$ |$$ |  $$ |   $$ |   
+ $$$$$$/     $$/   $$/   $$/ $$/   $$/    $$/    
+                                                 
+                                                 
+                                                 
+`);
 
   const tron_helper = new Tron_helper();
   tron_helper.ScanningBlock();
