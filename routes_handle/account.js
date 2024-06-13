@@ -1,58 +1,57 @@
-const db = require('../db/index')
-const bcrypt = require('bcryptjs')
-const jwt = require('jsonwebtoken')
-const jwtConfig = require('../jwt_config/index')
-const crypto = require('crypto');
-const fs = require('fs');
+const db = require("../db/index");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const jwtConfig = require("../jwt_config/index");
+const crypto = require("crypto");
+const fs = require("fs");
 
 const sqlQuery = (sqlStr, option) => {
-    return new Promise((resolve, reject) => {
-        db.query(sqlStr, option, (err, res) => { 
-            if (err)
-                reject(err);
-                resolve(res)
-        })
-    })
-}
+  return new Promise((resolve, reject) => {
+    db.query(sqlStr, option, (err, res) => {
+      if (err) reject(err);
+      resolve(res);
+    });
+  });
+};
 
 const transactionQuery = (connection, sqlStr, option) => {
-    return new Promise((sqlResolve, sqlReject) => {
-          const data = params[index];
-          connection.query(sqlStr, data, (sqlErr, result) => {
-            if (sqlErr) {
-              return sqlReject(sqlErr);
-            }
-            sqlResolve(result);
-          });
-        });
-}
+  return new Promise((sqlResolve, sqlReject) => {
+    const data = params[index];
+    connection.query(sqlStr, data, (sqlErr, result) => {
+      if (sqlErr) {
+        return sqlReject(sqlErr);
+      }
+      sqlResolve(result);
+    });
+  });
+};
 
 exports.test = (req, res) => {
-   var sqls = [
+  var sqls = [
     // "insert into goods set ?", // 删除 语句
     // "delete from goods where goods_id = ?", // 删除 语句
     "update goods set num = ? where goods_id = ?;", // 更新语句
-    ];
-    var params = [
-      // {'num': Math.random()}, // parmas 是数组格式 与sqls里的sql语句里 ? 一一对应
-      // [1],
-      [Math.random(), 1],
-    ];
+  ];
+  var params = [
+    // {'num': Math.random()}, // parmas 是数组格式 与sqls里的sql语句里 ? 一一对应
+    // [1],
+    [Math.random(), 1],
+  ];
 
-    transaction(sqls, params)
+  transaction(sqls, params)
     .then((arrResult) => {
-        // do anything ....
-        res.send(arrResult)
-        console.log(arrResult)
+      // do anything ....
+      res.send(arrResult);
+      console.log(arrResult);
     })
     .catch((err) => {
-        // error
-        console.log(err);
+      // error
+      console.log(err);
     });
-}
- 
-function transaction(sqls, params) { 
- return new Promise((resolve, reject) => {
+};
+
+function transaction(sqls, params) {
+  return new Promise((resolve, reject) => {
     db.getConnection(function (err, connection) {
       // 连接失败 promise直接返回失败
       if (err) {
@@ -116,125 +115,122 @@ function transaction(sqls, params) {
           });
       });
     });
- });
+  });
 }
 
 exports.register = async (req, res) => {
-    const info = req.body;
-    const bcryptPwd = bcrypt.hashSync(info.password, 10);
-    const create_time = new Date();
-    const onlyId = crypto.randomUUID();
-    const oldName = req.files[0].filename;
-    const newName = Buffer.from(req.files[0].originalname, 'latin1').toString('utf8');
-    fs.renameSync('./public/upload/' + oldName, './public/upload/' + newName);
-    const image_url = `http://127.0.0.1:3007/upload/${newName}`
+  const info = req.body;
+  const bcryptPwd = bcrypt.hashSync(info.password, 10);
+  const create_time = new Date();
+  const onlyId = crypto.randomUUID();
+  const oldName = req.files[0].filename;
+  const newName = Buffer.from(req.files[0].originalname, "latin1").toString("utf8");
+  fs.renameSync("./public/upload/" + oldName, "./public/upload/" + newName);
+  const image_url = `http://127.0.0.1:3007/upload/${newName}`;
 
-    db.query('BEGIN TRAN');
+  db.query("BEGIN TRAN");
 
-    try {
-        const selectUserRes = await sqlQuery('select * from users where account = ?', info.account)
+  try {
+    const selectUserRes = await sqlQuery("select * from users_info  where account = ?", info.account);
 
-        if (selectUserRes.length > 0) return res.cc('账号已存在')
+    if (selectUserRes.length > 0) return res.cc("账号已存在");
 
-        const insertUserRes = await sqlQuery('insert into users set ?', { 
-            account: info.account,
-            password: bcryptPwd,
-            nickname: info.nickname,
-            email: info.email,
-            sex: info.sex,
-            identity: '用户',
-            identityId: 0,
-            create_time,
-            update_time: create_time,
-            status: 0
-        })
-        if (insertUserRes.affectedRows !== 1) {
-            db.query('ROLLBACK TRAN')
-            return res.cc('注册失败')
-        }
-        const insertImgRes = await sqlQuery('insert into images set ?', {
-            image_url,
-            onlyId
-        })
-        if (insertImgRes.affectedRows !== 1) {
-            db.query('ROLLBACK TRAN')
-            return res.cc('注册失败')
-        } else {
-            await sqlQuery('update users set image_url = ? where account = ?', [image_url, info.account])
-
-            db.query('COMMIT')
-
-            res.send({
-                status: 0,
-                msg: '注册成功'
-            })
-        }
-    } catch (error) {
-        db.query('ROLLBACK TRAN')
-        return res.cc(error)
+    const insertUserRes = await sqlQuery("insert into users_info  set ?", {
+      account: info.account,
+      password: bcryptPwd,
+      nickname: info.nickname,
+      email: info.email,
+      sex: info.sex,
+      identity: "用户",
+      identityId: 0,
+      create_time,
+      update_time: create_time,
+      status: 0,
+    });
+    if (insertUserRes.affectedRows !== 1) {
+      db.query("ROLLBACK TRAN");
+      return res.cc("注册失败");
     }
-}
+    const insertImgRes = await sqlQuery("insert into users_info _avatar set ?", {
+      image_url,
+      onlyId,
+    });
+    if (insertImgRes.affectedRows !== 1) {
+      db.query("ROLLBACK TRAN");
+      return res.cc("注册失败");
+    } else {
+      await sqlQuery("update users_info  set image_url = ? where account = ?", [image_url, info.account]);
+
+      db.query("COMMIT");
+
+      res.send({
+        status: 0,
+        msg: "注册成功",
+      });
+    }
+  } catch (error) {
+    db.query("ROLLBACK TRAN");
+    return res.cc(error);
+  }
+};
 
 exports.login = (req, res, next) => {
-    const info = req.body;
+  const info = req.body;
 
-    const sql = 'select * from users where account = ?'
+  const sql = "select * from users_info  where account = ?";
 
-    db.query(sql, info.account, (err, results) => {
+  db.query(sql, info.account, (err, results) => {
+    if (err) return res.cc(err);
 
-        if (err) return res.cc(err)
-        
-        if (results.length <= 0) return res.cc('找不到该用户')
-        
-        const compareResult = bcrypt.compareSync(info.password, results[0].password)
+    if (results.length <= 0) return res.cc("找不到该用户");
 
-        if (!compareResult) return res.cc('密码不正确')
+    const compareResult = bcrypt.compareSync(info.password, results[0].password);
 
-        if (results.status == 1) return res.cc('账号被冻结')
+    if (!compareResult) return res.cc("密码不正确");
 
-        const user = {
-            ...results[0],
-        }
+    if (results.status == 1) return res.cc("账号被冻结");
 
-        const tokenStr = jwt.sign(user, jwtConfig.jwtSecretKey)
+    const user = {
+      ...results[0],
+    };
 
-        res.send({
-            data: {
-                token: tokenStr
-            },
-            code: 0,
-            msg: '登录成功'
-        })
-    })
-}
+    const tokenStr = jwt.sign(user, jwtConfig.jwtSecretKey);
+
+    res.send({
+      data: {
+        token: tokenStr,
+      },
+      code: 0,
+      msg: "登录成功",
+    });
+  });
+};
 
 exports.delete = (req, res, next) => {
-    const info = req.body;
+  const info = req.body;
 
-    const sql_select = 'select * from users where account = ?'
+  const sql_select = "select * from users_info  where account = ?";
 
-    db.query(sql_select, info.account, (err, results) => {
+  db.query(sql_select, info.account, (err, results) => {
+    if (err) return res.cc(err);
 
-        if (err) return res.cc(err)
-        
-        if (results.length <= 0) return res.cc('找不到该用户')
-        
-        const compareResult = bcrypt.compareSync(info.password, results[0].password)
+    if (results.length <= 0) return res.cc("找不到该用户");
 
-        if (!compareResult) return res.cc('密码不正确')
+    const compareResult = bcrypt.compareSync(info.password, results[0].password);
 
-        const sql_delete = 'delete from users where account = ?'
+    if (!compareResult) return res.cc("密码不正确");
 
-        db.query(sql_delete, info.account, (err, results) => {
+    const sql_delete = "delete from users_info  where account = ?";
 
-            if (err) return res.cc(err)
-            
-            if (results.affectedRows !== 1) return res.cc('删除失败')
-            
-            res.send({
-                code: 0,
-                msg: '删除成功'
-            })
-        })
-    })
-}
+    db.query(sql_delete, info.account, (err, results) => {
+      if (err) return res.cc(err);
+
+      if (results.affectedRows !== 1) return res.cc("删除失败");
+
+      res.send({
+        code: 0,
+        msg: "删除成功",
+      });
+    });
+  });
+};

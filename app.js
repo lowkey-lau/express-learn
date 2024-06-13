@@ -14,6 +14,7 @@ var usersRouter = require("./routes/users");
 var accountRouter = require("./routes/account");
 var userRouter = require("./routes/user");
 var tronRouter = require("./routes/tron");
+var ethRouter = require("./routes/eth");
 
 var app = express();
 // view engine setup
@@ -47,6 +48,7 @@ app.use((req, res, next) => {
 const jwtConfig = require("./jwt_config/index.js");
 const { expressjwt: jwt } = require("express-jwt");
 const Joi = require("joi");
+const { Tron_helper } = require("./utils/tron_helper.js");
 // app.use(jwt({
 //   secret: jwtConfig.jwtSecretKey, algorithms: ['HS256']
 // }).unless({
@@ -62,6 +64,7 @@ app.use("/users", usersRouter);
 app.use("/api/account", accountRouter);
 app.use("/api/user", userRouter);
 app.use("/api/tron", tronRouter);
+app.use("/api/eth", ethRouter);
 
 app.use((err, req, res, next) => {
   if (err instanceof Joi.ValidationError) return res.cc(err);
@@ -85,6 +88,9 @@ app.use(function (err, req, res, next) {
 
 app.listen(3007, () => {
   console.log("this run at 3007");
+
+  const tron_helper = new Tron_helper();
+  tron_helper.ScanningBlock();
 });
 
 module.exports = app;

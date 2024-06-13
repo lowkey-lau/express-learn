@@ -1,4 +1,3 @@
-const sdk = require("@api/tron");
 const fetch = require("node-fetch");
 const TronWeb = require("tronweb");
 
@@ -9,13 +8,19 @@ class Tron_helper {
 
   constructor() {
     address: "";
-    blockConfirmQuantity: 10;
+    blockConfirmQuantity: 20;
 
     this.tronWeb = new TronWeb({
       fullHost: "https://nile.trongrid.io",
       headers: { "TRON-PRO-API-KEY": API_KEY },
     });
   }
+
+  //验证输入地址是否规范
+  Validateaddress = async (address = "TXpQpC14yYKbjdmXR5W6p3vLsrAn4MwXzn") => {
+    const url = `${REQUEST_NET}/wallet/validateaddress`;
+    return await fetchFun(url, { address });
+  };
 
   // 创建地址，包含助记词/私钥/公钥
   CreateAccount = async () => {
@@ -32,16 +37,9 @@ class Tron_helper {
     return this.tronWeb.address.fromPrivateKey(privateKey);
   };
 
-  //验证输入地址是否规范
-  Validateaddress = async (address = "TXpQpC14yYKbjdmXR5W6p3vLsrAn4MwXzn") => {
-    const url = `${REQUEST_NET}/wallet/validateaddress`;
-    return await fetchFun(url, { address });
-  };
-
   GetBalance = async (address = "TXpQpC14yYKbjdmXR5W6p3vLsrAn4MwXzn") => {
     const balance = await this.tronWeb.trx.getBalance(address);
-    const result = Number(this.tronWeb.fromSun(balance));
-    return result;
+    return Number(this.tronWeb.fromSun(balance));
     // try {
     //   const url = `${REQUEST_NET}/wallet/getaccount`;
     //   let res = await fetchFun(url, { address });
@@ -83,7 +81,7 @@ class Tron_helper {
   };
 
   GetTransactionInfoByBlockNum = async (num = 44870674) => {
-    return this.tronWeb.trx.getBlock(num);
+    return this.tronWeb.trx.getTransactionFromBlock(num);
   };
 
   GetNowBlock = async () => {
@@ -123,6 +121,25 @@ class Tron_helper {
         .then((json) => resolve(json))
         .catch((err) => reject("error:" + err));
     });
+  };
+
+  ScanningBlock = () => {
+    const tronApi = new Tron_helper();
+    let array = [];
+
+    clearInterval(timer);
+    let timer = setInterval(async () => {
+      let result = await tronApi.GetNowBlock();
+      let blockNum = result.block_header.raw_data.number;
+      if (array.indexOf(blockNum) == -1) {
+        array.push(blockNum);
+
+        // const res = await tronApi.GetTransactionInfoByBlockNum(blockNum);
+        // console.log(res);
+      }
+      if (array.length == 20) clearInterval(timer);
+      console.log("object -> ", result.block_header.raw_data.number, array);
+    }, 1000);
   };
 }
 
