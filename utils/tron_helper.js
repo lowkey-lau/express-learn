@@ -2,6 +2,9 @@ const db = require("../db/index");
 const fetch = require("node-fetch");
 const TronWeb = require("tronweb");
 const ethers = require("ethers");
+const { resolve, reject } = require("core-js/fn/promise");
+const { Query_helper } = require("./query_helper");
+var _ = require("lodash");
 
 const API_KEY = "96848c40-7cf5-4011-a930-05d2a09e5aab";
 const REQUEST_NET = "https://nile.trongrid.io";
@@ -134,73 +137,110 @@ class Tron_helper {
     });
   };
 
-  ScanningBlock = () => {
-    const tronApi = new Tron_helper();
+  ScanningBlock = async () => {
+    const tron_helper = new Tron_helper();
+    const query_helper = new Query_helper();
     let blockArray = [];
-    // let users = [];
-    // const ddd = db.query("SELECT account FROM users_info", (err, result) => {
-    //   users = result.account;
-    // });
-
-    // console.log(users);
-
-    // let blockNum = 47671479;
+    // let blockNum = 47671460;
 
     clearInterval(timer);
     let timer = setInterval(async () => {
-      let result = await tronApi.GetNowBlock();
-      let blockNum = result.block_header.raw_data.number;
+      let latestBlock = await tron_helper.GetNowBlock();
+      let blockNum = latestBlock.block_header.raw_data.number;
+      const count = await query_helper.checkBlockNumDB(blockNum);
 
-      if (blockArray.indexOf(blockNum) == -1) {
-        const res = await tronApi.GetTransactionInfoByBlockNum(blockNum);
+      if (count == 0) {
+        db.query("insert into users_block_num set ?", {
+          block_num: blockNum,
+        });
 
-        // console.log("res ->", res);
+        const TradeList = await tron_helper.GetTransactionInfoByBlockNum(blockNum);
 
-        if (res.length > 0) {
-          res.forEach(async (item) => {
-            // console.log(item.raw_data.contract[0].type);
-            // console.log(item.raw_data.contract[0].parameter.value.owner_address);
-            // console.log(this.tronWeb.address.fromHex(item.raw_data.contract[0].parameter.value.owner_address));
-            // console.log(fromHexAddress == "TXpQpC14yYKbjdmXR5W6p3vLsrAn4MwXzn");
-            // console.log();
-            // 4577ffb80e0a1d6903b01343bc288abd1fc6384805ae62681abee2f4b368debf
-            if (this.tronWeb.address.fromHex(item.raw_data.contract[0].parameter.value.owner_address) == "TXpQpC14yYKbjdmXR5W6p3vLsrAn4MwXzn") {
-              console.log(item.raw_data.contract[0].type);
-              console.log(item.txID);
-              if (item.raw_data.contract[0].type == "TransferContract") {
-                // console.log(item.raw_data.contract[0].parameter.value.owner_address);
-                console.log("From -> ", this.tronWeb.address.fromHex(item.raw_data.contract[0].parameter.value.owner_address));
-                console.log("To -> ", this.tronWeb.address.fromHex(item.raw_data.contract[0].parameter.value.to_address));
-                console.log("Value -> ", this.tronWeb.fromSun(item.raw_data.contract[0].parameter.value.amount), "TRX");
-              } else if (item.raw_data.contract[0].type == "TriggerSmartContract") {
-                console.log("From -> ", this.tronWeb.address.fromHex(item.raw_data.contract[0].parameter.value.owner_address));
-                console.log("Contract -> ", this.tronWeb.address.fromHex(item.raw_data.contract[0].parameter.value.contract_address));
-                console.log("Data -> ", item.raw_data.contract[0].parameter.value.data);
-                const data = item.raw_data.contract[0].parameter.value.data;
-                const formatData = await decodeParamsFunc(["address", "uint256"], data, true);
-                // console.log(this.tronWeb.toAscii(data));
-                console.log(formatData);
-                console.log("To -> ", this.tronWeb.address.fromHex(formatData[0]));
-                console.log("Value -> ", this.tronWeb.fromSun(formatData[1]), "USDT");
+        // :) 首先筛选出 TRX转账 及 TRC-20转账
+        const filterTradeList = TradeList.filter((item) => {
+          return item.raw_data.contract[0].type == "TransferContract" || item.raw_data.contract[0].type == "TriggerSmartContract";
+        });
 
-                // console.log("Value -> ", this.tronWeb.fromSun(item.raw_data.contract[0].parameter.value.amount));
-                // let ddd = await tronApi.GetTransactionInfoById(item.txID);
-                // console.log("Value ->", this.tronWeb.fromSun(this.tronWeb.toDecimal(`0x${ddd.log[0].data}`)));
-              }
-              blockArray.push(blockNum);
-              console.log("BLOCK->", blockNum, blockArray);
-              console.log("----------------------");
+        if (filterTradeList.length > 0) {
+          for (let i = 0; i < filterTradeList.length; i++) {
+            let from_address = this.tronWeb.address.fromHex(filterTradeList[i].raw_data.contract[0].parameter.value.owner_address),
+              to_address = "",
+              value = 0,
+              unit = "TRX";
+
+            // :) 这里 TRX转账 或者 TRC-20转账
+            if (filterTradeList[i].raw_data.contract[0].type == "TransferContract") {
+              to_address = this.tronWeb.address.fromHex(filterTradeList[i].raw_data.contract[0].parameter.value.to_address);
+              value = this.tronWeb.fromSun(filterTradeList[i].raw_data.contract[0].parameter.value.amount);
+              unit = "TRX";
+            } else if (filterTradeList[i].raw_data.contract[0].type == "TriggerSmartContract") {
+              // :) 合约返回数据加工处理
+              const data = filterTradeList[i].raw_data.contract[0].parameter.value.data;
+              const transferMethodId = "a9059cbb";
+              const methodId = data.slice(0, 8);
+              if (transferMethodId != methodId) continue; //判断是否为Transfer()
+
+              const toInHex = "0x" + data.slice(32, 72);
+              to_address = this.tronWeb.address.fromHex(toInHex);
+
+              const amountHex = "0x" + data.slice(72);
+              value = this.tronWeb.fromSun(this.tronWeb.toDecimal(amountHex));
+              unit = "USDT";
             }
 
-            // TransferContract TRX转账
-            // TriggerSmartContract 合约地址转账
-            // if(item.raw_data.contract[0].type)
-          });
+            // :) 判断是否跟数据库账户地址有关联
+            let count = await query_helper.checkAddressDB(from_address, to_address);
+            if (count == 0) continue;
+
+            console.log("From -> ", from_address);
+            console.log("To -> ", to_address);
+            console.log("Value -> ", value, unit);
+            console.log("符合条件区块 ->", blockNum);
+            console.log("----");
+          }
+
+          // res.forEach(async (item) => {
+          //   // console.log(item.raw_data.contract[0].type);
+          //   // console.log(item.raw_data.contract[0].parameter.value.owner_address);
+          //   // console.log(this.tronWeb.address.fromHex(item.raw_data.contract[0].parameter.value.owner_address));
+          //   // console.log(fromHexAddress == "TXpQpC14yYKbjdmXR5W6p3vLsrAn4MwXzn");
+          //   // console.log();
+          //   // 4577ffb80e0a1d6903b01343bc288abd1fc6384805ae62681abee2f4b368debf
+          //   if (this.tronWeb.address.fromHex(item.raw_data.contract[0].parameter.value.owner_address) == "TXpQpC14yYKbjdmXR5W6p3vLsrAn4MwXzn") {
+          //     console.log(item.raw_data.contract[0].type);
+          //     console.log(item.txID);
+          //     if (item.raw_data.contract[0].type == "TransferContract") {
+          //       // console.log(item.raw_data.contract[0].parameter.value.owner_address);
+          //       console.log("From -> ", this.tronWeb.address.fromHex(item.raw_data.contract[0].parameter.value.owner_address));
+          //       console.log("To -> ", this.tronWeb.address.fromHex(item.raw_data.contract[0].parameter.value.to_address));
+          //       console.log("Value -> ", this.tronWeb.fromSun(item.raw_data.contract[0].parameter.value.amount), "TRX");
+          //     } else if (item.raw_data.contract[0].type == "TriggerSmartContract") {
+          //       console.log("From -> ", this.tronWeb.address.fromHex(item.raw_data.contract[0].parameter.value.owner_address));
+          //       console.log("Contract -> ", this.tronWeb.address.fromHex(item.raw_data.contract[0].parameter.value.contract_address));
+          //       console.log("Data -> ", item.raw_data.contract[0].parameter.value.data);
+          //       const data = item.raw_data.contract[0].parameter.value.data;
+          //       const formatData = await decodeParamsFunc(["address", "uint256"], data, true);
+          //       // console.log(this.tronWeb.toAscii(data));
+          //       // console.log(formatData);
+          //       console.log("To -> ", this.tronWeb.address.fromHex(formatData[0]));
+          //       console.log("Value -> ", this.tronWeb.fromSun(formatData[1]), "USDT");
+          //       // console.log("Value -> ", this.tronWeb.fromSun(item.raw_data.contract[0].parameter.value.amount));
+          //       // let ddd = await tron_helper.GetTransactionInfoById(item.txID);
+          //       // console.log("Value ->", this.tronWeb.fromSun(this.tronWeb.toDecimal(`0x${ddd.log[0].data}`)));
+          //     }
+          //     blockArray.push(blockNum);
+          //     console.log("BLOCK->", blockNum, blockArray);
+          //     console.log("----------------------");
+          //   }
+          //   // TransferContract TRX转账
+          //   // TriggerSmartContract 合约地址转账
+          //   // if(item.raw_data.contract[0].type)
+          // });
         }
       }
       // if (blockArray.length == 20) clearInterval(timer);
 
-      // blockNum++;
+      blockNum++;
 
       // console.log("object -> ", result.block_header.raw_data.number, array);
     }, 1000);
@@ -242,19 +282,47 @@ const ADDRESS_PREFIX_REGEX = /^(41)/;
 const ADDRESS_PREFIX = "41";
 
 async function decodeParamsFunc(types, output, ignoreMethodHash) {
-  if (!output || typeof output === "boolean") {
-    ignoreMethodHash = output;
-    output = types;
+  // if (!output || typeof output === "boolean") {
+  //   ignoreMethodHash = output;
+  //   output = types;
+  // }
+
+  // if (ignoreMethodHash && output.replace(/^0x/, "").length % 64 === 8) output = "0x" + output.replace(/^0x/, "").substring(8);
+
+  // const abiCoder = new AbiCoder();
+
+  // console.log("output->", output);
+
+  // if (output.replace(/^0x/, "").length % 64) throw new Error("The encoded string is not valid. Its length must be a multiple of 64.");
+  // return abiCoder.decode(types, output).reduce((obj, arg, index) => {
+  //   console.log(arg);
+
+  //   if (types[index] == "address") arg = ADDRESS_PREFIX + arg.substr(2).toLowerCase();
+  //   obj.push(arg);
+  //   return obj;
+  // }, []);
+
+  const toInHex = "0x" + data.slice(32, 72);
+  const to = provider.address.fromHex(toInHex);
+  const amountHex = "0x" + data.slice(72);
+  const amount = ethers.toBigInt(amountHex).toString();
+  return {
+    amount,
+    to,
+  };
+}
+
+function decode(data) {
+  const transferMethodId = "a9059cbb";
+  const methodId = data.slice(0, 8);
+  if (transferMethodId == methodId) {
+    const toInHex = "0x" + data.slice(32, 72);
+    const to = provider.address.fromHex(toInHex);
+    const amountHex = "0x" + data.slice(72);
+    const amount = ethers.toBigInt(amountHex).toString();
+    return {
+      amount,
+      to,
+    };
   }
-
-  if (ignoreMethodHash && output.replace(/^0x/, "").length % 64 === 8) output = "0x" + output.replace(/^0x/, "").substring(8);
-
-  const abiCoder = new AbiCoder();
-
-  if (output.replace(/^0x/, "").length % 64) throw new Error("The encoded string is not valid. Its length must be a multiple of 64.");
-  return abiCoder.decode(types, output).reduce((obj, arg, index) => {
-    if (types[index] == "address") arg = ADDRESS_PREFIX + arg.substr(2).toLowerCase();
-    obj.push(arg);
-    return obj;
-  }, []);
 }
