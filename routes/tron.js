@@ -15,5 +15,6 @@ router.post("/getNowBlock", tronHandle.getNowBlock);
 router.post("/sendTransaction", tronHandle.sendTransaction);
 router.post("/sendAddressTransaction", tronHandle.sendAddressTransaction);
 router.post("/getTransactionList", tronHandle.getTransactionList);
+router.post("/getApiTradeLog", tronHandle.getApiTradeLog);
 
 module.exports = router;

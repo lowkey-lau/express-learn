@@ -1,4 +1,4 @@
-// const db = require("../db/index");
+const db = require("../db/index");
 const { Tron_helper } = require("../utils/tron_helper");
 
 exports.createAccount = async (req, res) => {
@@ -109,5 +109,28 @@ exports.getTransactionList = async (req, res) => {
   res.send({
     code: 0,
     data: resData,
+  });
+};
+
+exports.getApiTradeLog = async (req, res) => {
+  const { pageNum = 1, pageSize = 20 } = req.body;
+
+  const sql_select = `select * from users_trade_log order by id ASC limit ${pageSize} offset ${(pageNum - 1) * pageSize}`;
+
+  db.query(sql_select, "", (err, results) => {
+    if (err) return res.cc(err);
+
+    db.query("SELECT COUNT(*) FROM users_trade_log", (err, count) => {
+      if (err) return res.cc(err);
+      res.send({
+        data: {
+          total: count[0]["COUNT(*)"],
+          pageNum,
+          pageSize,
+          list: results,
+        },
+        code: 0,
+      });
+    });
   });
 };

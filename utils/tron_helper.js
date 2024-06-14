@@ -2,7 +2,6 @@ const db = require("../db/index");
 const fetch = require("node-fetch");
 const TronWeb = require("tronweb");
 const ethers = require("ethers");
-const { resolve, reject } = require("core-js/fn/promise");
 const { Query_helper } = require("./query_helper");
 var _ = require("lodash");
 
@@ -140,7 +139,7 @@ class Tron_helper {
   ScanningBlock = async () => {
     const tron_helper = new Tron_helper();
     const query_helper = new Query_helper();
-    let blockArray = [];
+    // let blockArray = [];
     // let blockNum = 47671460;
 
     clearInterval(timer);
@@ -176,6 +175,11 @@ class Tron_helper {
             } else if (filterTradeList[i].raw_data.contract[0].type == "TriggerSmartContract") {
               // :) 合约返回数据加工处理
               const data = filterTradeList[i].raw_data.contract[0].parameter.value.data;
+
+              // const iface = ethers.Interface;
+              // const result = iface.decodeFunctionResult("Transfer", data);
+              // console.log(result);
+
               const transferMethodId = "a9059cbb";
               const methodId = data.slice(0, 8);
               if (transferMethodId != methodId) continue; //判断是否为Transfer()
