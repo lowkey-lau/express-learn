@@ -197,6 +197,16 @@ class Tron_helper {
             console.log("Value -> ", value, unit);
             console.log("符合条件区块 ->", blockNum);
             console.log("----");
+
+            db.query("insert into users_trade_log set ?", {
+              from: from_address,
+              to: to_address,
+              txid: filterTradeList[i].txID,
+              amount: value,
+              block_num: blockNum,
+              type: unit,
+              status: 0,
+            });
           }
 
           // res.forEach(async (item) => {
