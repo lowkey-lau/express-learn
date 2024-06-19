@@ -41,32 +41,9 @@ class Tron_helper {
     return this.tronWeb.address.fromPrivateKey(privateKey);
   };
 
-  GetBalance = async (address = "TXpQpC14yYKbjdmXR5W6p3vLsrAn4MwXzn", block_num = "latest") => {
-    // const balance = await this.tronWeb.trx.getBalance(address);
-    // return Number(this.tronWeb.fromSun(balance));
-    const formatAddress = `0x${this.tronWeb.address.toHex(address)}`;
-
-    let raw = JSON.stringify({
-      method: "eth_getBalance",
-      params: [formatAddress, block_num],
-      id: 1,
-      jsonrpc: "2.0",
-    });
-
-    try {
-      const res = await formatFetch(raw);
-      return Number(this.tronWeb.fromSun(res));
-    } catch (error) {
-      console.log(error);
-    }
-
-    // fetch("https://docs-demo.tron-mainnet.quiknode.pro/jsonrpc", requestOptions)
-    //   .then((response) => response.text())
-    //   .then((result) => console.log(result))
-    //   .catch((error) => console.log("error", error));
-
-    // fetch(`${REQUEST_NET}/jsonrpc`);
-
+  GetBalance = async (address = "TXpQpC14yYKbjdmXR5W6p3vLsrAn4MwXzn") => {
+    const balance = await this.tronWeb.trx.getBalance(address);
+    return Number(this.tronWeb.fromSun(balance));
     // try {
     //   const url = `${REQUEST_NET}/wallet/getaccount`;
     //   let res = await fetchFun(url, { address });
@@ -322,22 +299,3 @@ function decode(data) {
     };
   }
 }
-
-const formatFetch = (raw) => {
-  var myHeaders = new Headers();
-  myHeaders.append("Content-Type", "application/json");
-
-  var requestOptions = {
-    method: "POST",
-    headers: myHeaders,
-    body: raw,
-    redirect: "follow",
-  };
-
-  return new Promise((resolve, reject) => {
-    fetch(`${REQUEST_NET}/jsonrpc`, requestOptions)
-      .then((response) => response.text())
-      .then((result) => resolve(JSON.parse(result).result))
-      .catch((error) => reject(error));
-  });
-};
