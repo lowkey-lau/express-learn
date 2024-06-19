@@ -212,51 +212,10 @@ class Tron_helper {
               status: 0,
             });
           }
-
-          // res.forEach(async (item) => {
-          //   // console.log(item.raw_data.contract[0].type);
-          //   // console.log(item.raw_data.contract[0].parameter.value.owner_address);
-          //   // console.log(this.tronWeb.address.fromHex(item.raw_data.contract[0].parameter.value.owner_address));
-          //   // console.log(fromHexAddress == "TXpQpC14yYKbjdmXR5W6p3vLsrAn4MwXzn");
-          //   // console.log();
-          //   // 4577ffb80e0a1d6903b01343bc288abd1fc6384805ae62681abee2f4b368debf
-          //   if (this.tronWeb.address.fromHex(item.raw_data.contract[0].parameter.value.owner_address) == "TXpQpC14yYKbjdmXR5W6p3vLsrAn4MwXzn") {
-          //     console.log(item.raw_data.contract[0].type);
-          //     console.log(item.txID);
-          //     if (item.raw_data.contract[0].type == "TransferContract") {
-          //       // console.log(item.raw_data.contract[0].parameter.value.owner_address);
-          //       console.log("From -> ", this.tronWeb.address.fromHex(item.raw_data.contract[0].parameter.value.owner_address));
-          //       console.log("To -> ", this.tronWeb.address.fromHex(item.raw_data.contract[0].parameter.value.to_address));
-          //       console.log("Value -> ", this.tronWeb.fromSun(item.raw_data.contract[0].parameter.value.amount), "TRX");
-          //     } else if (item.raw_data.contract[0].type == "TriggerSmartContract") {
-          //       console.log("From -> ", this.tronWeb.address.fromHex(item.raw_data.contract[0].parameter.value.owner_address));
-          //       console.log("Contract -> ", this.tronWeb.address.fromHex(item.raw_data.contract[0].parameter.value.contract_address));
-          //       console.log("Data -> ", item.raw_data.contract[0].parameter.value.data);
-          //       const data = item.raw_data.contract[0].parameter.value.data;
-          //       const formatData = await decodeParamsFunc(["address", "uint256"], data, true);
-          //       // console.log(this.tronWeb.toAscii(data));
-          //       // console.log(formatData);
-          //       console.log("To -> ", this.tronWeb.address.fromHex(formatData[0]));
-          //       console.log("Value -> ", this.tronWeb.fromSun(formatData[1]), "USDT");
-          //       // console.log("Value -> ", this.tronWeb.fromSun(item.raw_data.contract[0].parameter.value.amount));
-          //       // let ddd = await tron_helper.GetTransactionInfoById(item.txID);
-          //       // console.log("Value ->", this.tronWeb.fromSun(this.tronWeb.toDecimal(`0x${ddd.log[0].data}`)));
-          //     }
-          //     blockArray.push(blockNum);
-          //     console.log("BLOCK->", blockNum, blockArray);
-          //     console.log("----------------------");
-          //   }
-          //   // TransferContract TRX转账
-          //   // TriggerSmartContract 合约地址转账
-          //   // if(item.raw_data.contract[0].type)
-          // });
         }
       }
-      // if (blockArray.length == 20) clearInterval(timer);
 
-      blockNum++;
-
-      // console.log("object -> ", result.block_header.raw_data.number, array);
+      // blockNum++;
     }, 1000);
   };
 }
