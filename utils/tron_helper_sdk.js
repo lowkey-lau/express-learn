@@ -56,7 +56,7 @@ class Tron_helper {
     // }
   };
 
-  GetAddressBalance = async (contractAddress = "TG3XXyExBkPp9nzdajDZsozEu4BkaSJozs", address = "TXpQpC14yYKbjdmXR5W6p3vLsrAn4MwXzn") => {
+  GetContractBalance = async (contractAddress = "TG3XXyExBkPp9nzdajDZsozEu4BkaSJozs", address = "TXpQpC14yYKbjdmXR5W6p3vLsrAn4MwXzn") => {
     this.tronWeb.setAddress(address);
 
     try {
@@ -97,10 +97,8 @@ class Tron_helper {
     return res;
   };
 
-  GetNowBlock = async () => {
+  GetLatestBlock = async () => {
     return this.tronWeb.trx.getCurrentBlock();
-    // const url = `${REQUEST_NET}/wallet/getnowblock`;
-    // return await fetchFun(url);
   };
 
   SendTransaction = async (privateKey, toAddress, quantity) => {
@@ -108,7 +106,7 @@ class Tron_helper {
     return this.tronWeb.trx.sendTransaction(toAddress, this.tronWeb.toSun(quantity), privateKey);
   };
 
-  SendAddressTransaction = async (privateKey, contractAddress, toAddress, quantity) => {
+  SendContractTransaction = async (privateKey, contractAddress, toAddress, quantity) => {
     this.tronWeb.setPrivateKey(privateKey);
     try {
       const { abi } = await this.tronWeb.trx.getContract(contractAddress);
@@ -144,7 +142,7 @@ class Tron_helper {
 
     clearInterval(timer);
     let timer = setInterval(async () => {
-      let latestBlock = await tron_helper.GetNowBlock();
+      let latestBlock = await tron_helper.GetLatestBlock();
       let blockNum = latestBlock.block_header.raw_data.number;
       const count = await query_helper.checkBlockNumDB(blockNum);
 

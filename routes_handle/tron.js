@@ -2,8 +2,8 @@ const db = require("../db/index");
 const { Tron_helper } = require("../utils/tron_helper");
 
 exports.createAccount = async (req, res) => {
-  const tronApi = new Tron_helper();
-  const resData = await tronApi.CreateAccount();
+  const tron_helper = new Tron_helper();
+  const resData = await tron_helper.CreateAccount();
 
   res.send({
     code: 0,
@@ -15,8 +15,8 @@ exports.createAccount = async (req, res) => {
 };
 
 exports.importMnemonic = async (req, res) => {
-  const tronApi = new Tron_helper();
-  const resData = await tronApi.importMnemonic(req.body.mnemonic);
+  const tron_helper = new Tron_helper();
+  const resData = await tron_helper.importMnemonic(req.body.mnemonic);
 
   res.send({
     code: 0,
@@ -28,16 +28,16 @@ exports.importMnemonic = async (req, res) => {
 };
 
 exports.importPrivateKey = async (req, res) => {
-  const tronApi = new Tron_helper();
+  const tron_helper = new Tron_helper();
   res.send({
     code: 0,
-    data: await tronApi.importPrivateKey(req.body.privateKey),
+    data: await tron_helper.importPrivateKey(req.body.privateKey),
   });
 };
 
 exports.getBalance = async (req, res) => {
-  const tronApi = new Tron_helper();
-  const resData = await tronApi.GetBalance(req.body.address);
+  const tron_helper = new Tron_helper();
+  const resData = await tron_helper.GetBalance(req.body.address);
 
   res.send({
     code: 0,
@@ -45,9 +45,9 @@ exports.getBalance = async (req, res) => {
   });
 };
 
-exports.getAddressBalance = async (req, res) => {
-  const tronApi = new Tron_helper();
-  const resData = await tronApi.GetAddressBalance(req.body.contractAddress, req.body.address);
+exports.getContractBalance = async (req, res) => {
+  const tron_helper = new Tron_helper();
+  const resData = await tron_helper.GetContractBalance(req.body.contractAddress, req.body.address);
 
   res.send({
     code: 0,
@@ -56,35 +56,35 @@ exports.getAddressBalance = async (req, res) => {
 };
 
 exports.getTransactionInfoById = async (req, res) => {
-  const tronApi = new Tron_helper();
+  const tron_helper = new Tron_helper();
 
   res.send({
     code: 0,
-    data: await tronApi.GetTransactionById(req.body.hxID),
+    data: await tron_helper.GetTransactionById(req.body.hxID),
   });
 };
 
 exports.getTransactionInfoByBlockNum = async (req, res) => {
-  const tronApi = new Tron_helper();
+  const tron_helper = new Tron_helper();
 
   res.send({
     code: 0,
-    data: await tronApi.GetTransactionInfoByBlockNum(req.body.blockNum),
+    data: await tron_helper.GetTransactionInfoByBlockNum(req.body.blockNum),
   });
 };
 
-exports.getNowBlock = async (req, res) => {
-  const tronApi = new Tron_helper();
+exports.getLatestBlock = async (req, res) => {
+  const tron_helper = new Tron_helper();
 
   res.send({
     code: 0,
-    data: await tronApi.GetNowBlock(req.body.blockNum),
+    data: await tron_helper.GetLatestBlock(),
   });
 };
 
 exports.sendTransaction = async (req, res) => {
-  const tronApi = new Tron_helper();
-  const resData = await tronApi.SendTransaction(req.body.privateKey, req.body.toAddress, req.body.quantity);
+  const tron_helper = new Tron_helper();
+  const resData = await tron_helper.SendTransaction(req.body.privateKey, req.body.toAddress, req.body.quantity);
 
   res.send({
     code: 0,
@@ -92,9 +92,9 @@ exports.sendTransaction = async (req, res) => {
   });
 };
 
-exports.sendAddressTransaction = async (req, res) => {
-  const tronApi = new Tron_helper();
-  const resData = await tronApi.SendAddressTransaction(req.body.privateKey, req.body.contractAddress, req.body.toAddress, req.body.quantity);
+exports.sendContractTransaction = async (req, res) => {
+  const tron_helper = new Tron_helper();
+  const resData = await tron_helper.SendContractTransaction(req.body.privateKey, req.body.contractAddress, req.body.toAddress, req.body.quantity);
 
   res.send({
     code: 0,
@@ -103,8 +103,8 @@ exports.sendAddressTransaction = async (req, res) => {
 };
 
 exports.getTransactionList = async (req, res) => {
-  const tronApi = new Tron_helper();
-  const resData = await tronApi.GetTransactionList(req.body.address);
+  const tron_helper = new Tron_helper();
+  const resData = await tron_helper.GetTransactionList(req.body.address);
 
   res.send({
     code: 0,

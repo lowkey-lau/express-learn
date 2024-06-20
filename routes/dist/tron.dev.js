@@ -1,8 +1,10 @@
-const express = require("express");
+"use strict";
 
-const router = express.Router();
+var express = require("express");
 
-const tronHandle = require("../routes_handle/tron");
+var router = express.Router();
+
+var tronHandle = require("../routes_handle/tron");
 
 router.post("/createAccount", tronHandle.createAccount);
 router.post("/importMnemonic", tronHandle.importMnemonic);
@@ -16,5 +18,4 @@ router.post("/sendTransaction", tronHandle.sendTransaction);
 router.post("/sendContractTransaction", tronHandle.sendContractTransaction);
 router.post("/getTransactionList", tronHandle.getTransactionList);
 router.post("/getApiTradeLog", tronHandle.getApiTradeLog);
-
 module.exports = router;

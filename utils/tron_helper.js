@@ -42,8 +42,6 @@ class Tron_helper {
   };
 
   GetBalance = async (address = "TXpQpC14yYKbjdmXR5W6p3vLsrAn4MwXzn", block_num = "latest") => {
-    // const balance = await this.tronWeb.trx.getBalance(address);
-    // return Number(this.tronWeb.fromSun(balance));
     const formatAddress = `0x${this.tronWeb.address.toHex(address)}`;
 
     let raw = JSON.stringify({
@@ -59,47 +57,29 @@ class Tron_helper {
     } catch (error) {
       console.log(error);
     }
-
-    // fetch("https://docs-demo.tron-mainnet.quiknode.pro/jsonrpc", requestOptions)
-    //   .then((response) => response.text())
-    //   .then((result) => console.log(result))
-    //   .catch((error) => console.log("error", error));
-
-    // fetch(`${REQUEST_NET}/jsonrpc`);
-
-    // try {
-    //   const url = `${REQUEST_NET}/wallet/getaccount`;
-    //   let res = await fetchFun(url, { address });
-    //   const balance = Number(this.tronWeb.fromSun(res.balance));
-    //   console.log(res.balance);
-    //   console.log(balance);
-    //   return balance;
-    // } catch (error) {
-    //   console.error("获取TRC余额出错:", error);
-    // }
   };
 
-  GetAddressBalance = async (contractAddress = "TG3XXyExBkPp9nzdajDZsozEu4BkaSJozs", address = "TXpQpC14yYKbjdmXR5W6p3vLsrAn4MwXzn") => {
+  GetContractBalance = async (contractAddress = "TG3XXyExBkPp9nzdajDZsozEu4BkaSJozs", address = "TXpQpC14yYKbjdmXR5W6p3vLsrAn4MwXzn") => {
     this.tronWeb.setAddress(address);
 
     try {
       const { abi } = await this.tronWeb.trx.getContract(contractAddress);
 
-      // 获取USDT合约实例
-      const usdtContract = await this.tronWeb.contract(abi.entrys, contractAddress);
+      // 获取代币合约实例
+      const trc20Contract = await this.tronWeb.contract(abi.entrys, contractAddress);
 
-      // 调用USDT合约的balanceOf方法获取余额
-      let balance = await usdtContract.methods.balanceOf(address).call();
+      // 调用代币合约的balanceOf方法获取余额
+      let balance = await trc20Contract.methods.balanceOf(address).call();
 
-      // 格式化余额为USDT数值
-      let usdtBalance = this.tronWeb.toDecimal(this.tronWeb.fromSun(balance));
+      // 格式化余额为代币数值
+      let trc20Balance = this.tronWeb.toDecimal(this.tronWeb.fromSun(balance));
 
-      console.log(`USDT余额: ${balance}`);
-      console.log(`USDT格式化余额: ${usdtBalance}`);
+      console.log(`代币余额: ${balance}`);
+      console.log(`代币格式化余额: ${trc20Balance}`);
 
-      return usdtBalance;
+      return trc20Balance;
     } catch (error) {
-      console.error("获取USDT余额出错:", error);
+      console.error("获取代币余额出错:", error);
     }
   };
 
@@ -120,7 +100,7 @@ class Tron_helper {
     return res;
   };
 
-  GetNowBlock = async () => {
+  GetLatestBlock = async () => {
     return this.tronWeb.trx.getCurrentBlock();
     // const url = `${REQUEST_NET}/wallet/getnowblock`;
     // return await fetchFun(url);
@@ -131,15 +111,15 @@ class Tron_helper {
     return this.tronWeb.trx.sendTransaction(toAddress, this.tronWeb.toSun(quantity), privateKey);
   };
 
-  SendAddressTransaction = async (privateKey, contractAddress, toAddress, quantity) => {
+  SendContractTransaction = async (privateKey, contractAddress, toAddress, quantity) => {
     this.tronWeb.setPrivateKey(privateKey);
     try {
       const { abi } = await this.tronWeb.trx.getContract(contractAddress);
-      // 获取USDT合约实例
-      const usdtContract = await this.tronWeb.contract(abi.entrys, contractAddress);
+      // 获取代币合约实例
+      const trc20Contract = await this.tronWeb.contract(abi.entrys, contractAddress);
 
-      // 调用USDT合约Transfer方法
-      let result = await usdtContract.methods.transfer(toAddress, this.tronWeb.toSun(quantity)).send();
+      // 调用代币合约Transfer方法
+      let result = await trc20Contract.methods.transfer(toAddress, this.tronWeb.toSun(quantity)).send();
 
       return this.tronWeb.trx.getTransaction(result);
     } catch (error) {
@@ -167,7 +147,7 @@ class Tron_helper {
 
     clearInterval(timer);
     let timer = setInterval(async () => {
-      let latestBlock = await tron_helper.GetNowBlock();
+      let latestBlock = await tron_helper.GetLatestBlock();
       let blockNum = latestBlock.block_header.raw_data.number;
       const count = await query_helper.checkBlockNumDB(blockNum);
 
@@ -212,7 +192,7 @@ class Tron_helper {
 
               const amountHex = "0x" + data.slice(72);
               value = this.tronWeb.fromSun(this.tronWeb.toDecimal(amountHex));
-              unit = "USDT";
+              unit = "代币";
             }
 
             // :) 判断是否跟数据库账户地址有关联

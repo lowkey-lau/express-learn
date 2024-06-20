@@ -1,8 +1,10 @@
-const express = require("express");
+"use strict";
 
-const router = express.Router();
+var express = require("express");
 
-const ethHandle = require("../routes_handle/eth");
+var router = express.Router();
+
+var ethHandle = require("../routes_handle/eth");
 
 router.post("/createAccount", ethHandle.createAccount);
 router.post("/importMnemonic", ethHandle.importMnemonic);
@@ -15,5 +17,4 @@ router.post("/getLatestBlock", ethHandle.getLatestBlock);
 router.post("/sendTransaction", ethHandle.sendTransaction);
 router.post("/sendContractTransaction", ethHandle.sendContractTransaction);
 router.post("/getTransactionList", ethHandle.getTransactionList);
-
 module.exports = router;
