@@ -5,6 +5,7 @@ const jwtConfig = require("../jwt_config/index");
 const crypto = require("crypto");
 const fs = require("fs");
 const { Tron_helper } = require("../utils/tron_helper");
+const xss = require("xss");
 
 const sqlQuery = (sqlStr, option) => {
   return new Promise((resolve, reject) => {
@@ -15,35 +16,31 @@ const sqlQuery = (sqlStr, option) => {
   });
 };
 
-const transactionQuery = (connection, sqlStr, option) => {
-  return new Promise((sqlResolve, sqlReject) => {
-    const data = params[index];
-    connection.query(sqlStr, data, (sqlErr, result) => {
-      if (sqlErr) {
-        return sqlReject(sqlErr);
-      }
-      sqlResolve(result);
-    });
-  });
-};
-
 exports.test = (req, res) => {
+  const account = db.escape(req.body.account);
+  const email = db.escape(req.body.email);
+
+  console.log(account);
+  console.log(email);
+  console.log(db.escape(account));
+  console.log(db.escape(email));
+
+  // const account = db.escape(req.account);
+  // const email = db.escape(req.password);
+
   var sqls = [
     // "insert into goods set ?", // 删除 语句
     // "delete from goods where goods_id = ?", // 删除 语句
-    "update goods set num = ? where goods_id = ?;", // 更新语句
-  ];
-  var params = [
-    // {'num': Math.random()}, // parmas 是数组格式 与sqls里的sql语句里 ? 一一对应
-    // [1],
-    [Math.random(), 1],
+    `select account from users_info where account = ${account} and email = ${email}`, // 更新语句
   ];
 
   transaction(sqls, params)
-    .then((arrResult) => {
+    .then((resData) => {
       // do anything ....
-      res.send(arrResult);
-      console.log(arrResult);
+      res.send({
+        code: 0,
+        data: resData[0] || [],
+      });
     })
     .catch((err) => {
       // error
@@ -59,10 +56,10 @@ function transaction(sqls, params) {
         return reject(err);
       }
       // 如果 语句和参数数量不匹配 promise直接返回失败
-      if (sqls.length !== params.length) {
-        connection.release(); // 释放掉
-        return reject(new Error("语句与传值不匹配"));
-      }
+      // if (sqls.length !== params.length) {
+      //   connection.release(); // 释放掉
+      //   return reject(new Error("语句与传值不匹配"));
+      // }
       // 开始执行事务
       connection.beginTransaction((beginErr) => {
         // 创建事务失败
@@ -237,12 +234,12 @@ exports.login = (req, res, next) => {
 
   const sql = "select * from users_info where account = ?";
 
-  db.query(sql, info.account, (err, results) => {
+  db.query(sql, encodeURIComponent(info.account), (err, results) => {
     if (err) return res.cc(err);
 
     if (results.length <= 0) return res.cc("找不到该用户");
 
-    const compareResult = bcrypt.compareSync(info.password, results[0].password);
+    const compareResult = bcrypt.compareSync(encodeURIComponent(info.password), results[0].password);
 
     if (!compareResult) return res.cc("密码不正确");
 
