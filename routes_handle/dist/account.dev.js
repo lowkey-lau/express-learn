@@ -16,243 +16,127 @@ var jwtConfig = require("../jwt_config/index");
 
 var crypto = require("crypto");
 
-var fs = require("fs");
-
-var _require = require("../utils/tron_helper"),
-    Tron_helper = _require.Tron_helper;
-
-var xss = require("xss");
-
-var sqlQuery = function sqlQuery(sqlStr, option) {
-  return new Promise(function (resolve, reject) {
-    db.query(sqlStr, option, function (err, res) {
-      if (err) reject(err);
-      resolve(res);
-    });
-  });
-};
-
-exports.test = function (req, res) {
-  var account = db.escape(req.body.account);
-  var email = db.escape(req.body.email);
-  console.log(account);
-  console.log(email);
-  console.log(db.escape(account));
-  console.log(db.escape(email)); // const account = db.escape(req.account);
-  // const email = db.escape(req.password);
-
-  var sqls = [// "insert into goods set ?", // 删除 语句
-  // "delete from goods where goods_id = ?", // 删除 语句
-  "select account from users_info where account = ".concat(account, " and email = ").concat(email) // 更新语句
-  ];
-  transaction(sqls, params).then(function (resData) {
-    // do anything ....
-    res.send({
-      code: 0,
-      data: resData[0] || []
-    });
-  })["catch"](function (err) {
-    // error
-    console.log(err);
-  });
-};
-
-function transaction(sqls, params) {
-  return new Promise(function (resolve, reject) {
-    db.getConnection(function (err, connection) {
-      // 连接失败 promise直接返回失败
-      if (err) {
-        return reject(err);
-      } // 如果 语句和参数数量不匹配 promise直接返回失败
-      // if (sqls.length !== params.length) {
-      //   connection.release(); // 释放掉
-      //   return reject(new Error("语句与传值不匹配"));
-      // }
-      // 开始执行事务
+var Result = require("../common/ResultCode"); // const fs = require("fs");
+// const { Tron_helper } = require("../utils/tron_helper");
 
 
-      connection.beginTransaction(function (beginErr) {
-        // 创建事务失败
-        if (beginErr) {
-          connection.release();
-          return reject(beginErr);
-        }
+var _require = require("../hooks/index"),
+    useSqlQuery = _require.useSqlQuery,
+    useSqlConnection = _require.useSqlConnection;
 
-        console.log("开始执行事务，共执行" + sqls.length + "条语句"); // 返回一个promise 数组
-
-        var funcAry = sqls.map(function (sql, index) {
-          return new Promise(function (sqlResolve, sqlReject) {
-            var data = params[index];
-            connection.query(sql, data, function (sqlErr, result) {
-              if (sqlErr) {
-                return sqlReject(sqlErr);
-              }
-
-              sqlResolve(result);
-            });
-          });
-        }); // 使用all 方法 对里面的每个promise执行的状态 检查
-
-        Promise.all(funcAry).then(function (arrResult) {
-          // 若每个sql语句都执行成功了 才会走到这里 在这里需要提交事务，前面的sql执行才会生效
-          // 提交事务
-          connection.commit(function (commitErr, info) {
-            if (commitErr) {
-              // 提交事务失败了
-              console.log("提交事务失败:" + commitErr); // 事务回滚，之前运行的sql语句不生效
-
-              connection.rollback(function (err) {
-                if (err) console.log("回滚失败：" + err);
-                connection.release();
-              }); // 返回promise失败状态
-
-              return reject(commitErr);
-            }
-
-            connection.release(); // 事务成功 返回 每个sql运行的结果 是个数组结构
-
-            resolve(arrResult);
-          });
-        })["catch"](function (error) {
-          // 多条sql语句执行中 其中有一条报错 直接回滚
-          connection.rollback(function () {
-            console.log("sql运行失败： " + error);
-            connection.release();
-            reject(error);
-          });
-        });
-      });
-    });
-  });
-}
-
-exports.register = function _callee(req, res) {
-  var tron_helper, info, bcryptPwd, create_time, onlyId, oldName, newName, image_url, addressInfo, sqls, params;
+exports.register = function _callee(req, res, next) {
+  var info, account, password, trade_password, accountRes;
   return regeneratorRuntime.async(function _callee$(_context) {
     while (1) {
       switch (_context.prev = _context.next) {
         case 0:
-          tron_helper = new Tron_helper();
           info = req.body;
-          bcryptPwd = bcrypt.hashSync(info.password, 10);
-          create_time = new Date();
-          onlyId = crypto.randomUUID();
-          oldName = req.files[0].filename;
-          newName = Buffer.from(req.files[0].originalname, "latin1").toString("utf8");
-          fs.renameSync("./public/upload/" + oldName, "./public/upload/" + newName);
-          image_url = "http://127.0.0.1:3007/upload/".concat(newName);
+          account = info.account;
+          password = bcrypt.hashSync(info.password, 10);
+          trade_password = bcrypt.hashSync(info.trade_password, 10);
+          _context.prev = 4;
+          _context.next = 7;
+          return regeneratorRuntime.awrap(useSqlQuery("select * from users_account where account = ?", account));
+
+        case 7:
+          accountRes = _context.sent;
+
+          if (accountRes[0].length) {
+            _context.next = 14;
+            break;
+          }
+
           _context.next = 11;
-          return regeneratorRuntime.awrap(tron_helper.CreateAccount());
+          return regeneratorRuntime.awrap(useSqlQuery("insert into users_account set ?", {
+            account: account,
+            password: password,
+            trade_password: trade_password
+          }));
 
         case 11:
-          addressInfo = _context.sent;
-          console.log(addressInfo);
-          sqls = [// "insert into goods set ?", // 删除 语句
-          // "delete from goods where goods_id = ?", // 删除 语句
-          "select * from users_info where account = ?", // 查询是否有此账户
-          "insert into users_info set ?", "insert into users_address_tron set ?", "insert into users_avatar set ?", "update users_info set image_url = ? where account = ?"];
-          params = [// {'num': Math.random()}, // parmas 是数组格式 与sqls里的sql语句里 ? 一一对应
-          // [1],
-          [info.account], {
-            account: info.account,
-            password: bcryptPwd,
-            nickname: info.nickname,
-            email: info.email,
-            sex: info.sex,
-            identity: "用户",
-            identityId: 0,
-            create_time: create_time,
-            update_time: create_time,
-            status: 0
-          }, {
-            account: info.account,
-            address: addressInfo.address,
-            mnemonic: addressInfo.mnemonic.phrase,
-            private_key: addressInfo.privateKey.slice(2),
-            create_time: create_time
-          }, {
-            image_url: image_url,
-            onlyId: onlyId
-          }, [image_url, info.account]];
-          transaction(sqls, params).then(function (arrResult) {
-            // do anything ....
-            console.log(arrResult);
-            res.send({
-              status: 0,
-              msg: "注册成功"
-            });
-          })["catch"](function (err) {
-            // error
-            console.log(err);
-          }); // db.query("BEGIN TRAN");
-          // try {
-          //   const selectUserRes = await sqlQuery("select * from users_info where account = ?", info.account);
-          //   if (selectUserRes.length > 0) return res.cc("账号已存在");
-          //   const insertUserRes = await sqlQuery("insert into users_info set ?", {
-          //     account: info.account,
-          //     password: bcryptPwd,
-          //     nickname: info.nickname,
-          //     email: info.email,
-          //     sex: info.sex,
-          //     identity: "用户",
-          //     identityId: 0,
-          //     create_time,
-          //     update_time: create_time,
-          //     status: 0,
-          //   });
-          //   if (insertUserRes.affectedRows !== 1) {
-          //     db.query("ROLLBACK TRAN");
-          //     return res.cc("注册失败");
-          //   }
-          //   const insertImgRes = await sqlQuery("insert into users_avatar set ?", {
-          //     image_url,
-          //     onlyId,
-          //   });
-          //   if (insertImgRes.affectedRows !== 1) {
-          //     db.query("ROLLBACK TRAN");
-          //     return res.cc("注册失败");
-          //   } else {
-          //     await sqlQuery("update users_info set image_url = ? where account = ?", [image_url, info.account]);
-          //     db.query("COMMIT");
-          //     res.send({
-          //       status: 0,
-          //       msg: "注册成功",
-          //     });
-          //   }
-          // } catch (error) {
-          //   db.query("ROLLBACK TRAN");
-          //   return res.cc(error);
-          // }
+          return _context.abrupt("return", res.json(Result.success("注册成功")));
 
-        case 16:
+        case 14:
+          return _context.abrupt("return", res.json(Result.fail("该用户已注册")));
+
+        case 15:
+          _context.next = 20;
+          break;
+
+        case 17:
+          _context.prev = 17;
+          _context.t0 = _context["catch"](4);
+          return _context.abrupt("return", next(_context.t0));
+
+        case 20:
         case "end":
           return _context.stop();
       }
     }
-  });
+  }, null, null, [[4, 17]]);
 };
 
-exports.login = function (req, res, next) {
-  var info = req.body;
-  var sql = "select * from users_info where account = ?";
-  db.query(sql, encodeURIComponent(info.account), function (err, results) {
-    if (err) return res.cc(err);
-    if (results.length <= 0) return res.cc("找不到该用户");
-    var compareResult = bcrypt.compareSync(encodeURIComponent(info.password), results[0].password);
-    if (!compareResult) return res.cc("密码不正确");
-    if (results.status == 1) return res.cc("账号被冻结");
+exports.login = function _callee2(req, res, next) {
+  var info, account, password, accountRes, compareResult, user, tokenStr;
+  return regeneratorRuntime.async(function _callee2$(_context2) {
+    while (1) {
+      switch (_context2.prev = _context2.next) {
+        case 0:
+          info = req.body;
+          account = info.account;
+          password = info.password;
+          _context2.prev = 3;
+          _context2.next = 6;
+          return regeneratorRuntime.awrap(useSqlQuery("select * from users_account where account = ?", account));
 
-    var user = _objectSpread({}, results[0]);
+        case 6:
+          accountRes = _context2.sent;
 
-    var tokenStr = jwt.sign(user, jwtConfig.jwtSecretKey);
-    res.send({
-      data: {
-        token: tokenStr
-      },
-      code: 0,
-      msg: "登录成功"
-    });
-  });
+          if (!accountRes[0]) {
+            _context2.next = 16;
+            break;
+          }
+
+          compareResult = bcrypt.compareSync(password, accountRes[0].password);
+
+          if (compareResult) {
+            _context2.next = 11;
+            break;
+          }
+
+          return _context2.abrupt("return", res.json(Result.fail("密码不正确")));
+
+        case 11:
+          // if (results.status == 1) return res.cc("账号被冻结");
+          user = _objectSpread({}, accountRes[0]);
+          tokenStr = jwt.sign(user, jwtConfig.jwtSecretKey, {
+            expiresIn: "3h"
+          });
+          return _context2.abrupt("return", res.json(Result.success({
+            user_id: accountRes[0].id,
+            account: accountRes[0].account,
+            token: tokenStr
+          })));
+
+        case 16:
+          return _context2.abrupt("return", res.json(Result.fail("找不到该用户")));
+
+        case 17:
+          _context2.next = 23;
+          break;
+
+        case 19:
+          _context2.prev = 19;
+          _context2.t0 = _context2["catch"](3);
+          console.log(_context2.t0);
+          return _context2.abrupt("return", res.json(Result.fail(_context2.t0)));
+
+        case 23:
+        case "end":
+          return _context2.stop();
+      }
+    }
+  }, null, null, [[3, 19]]);
 };
 
 exports["delete"] = function (req, res, next) {

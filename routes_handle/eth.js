@@ -1,9 +1,9 @@
-const { Eth_helper } = require("../utils/eth_helper");
+const { ETH_HELPER } = require("../utils/eth_helper");
 
 exports.createAccount = async (req, res) => {
   console.log(eth_helper);
 
-  const eth_helper = new Eth_helper();
+  const eth_helper = new ETH_HELPER();
   const resData = await eth_helper.CreateAccount();
 
   res.send({
@@ -13,7 +13,7 @@ exports.createAccount = async (req, res) => {
 };
 
 exports.importMnemonic = async (req, res) => {
-  const eth_helper = new Eth_helper();
+  const eth_helper = new ETH_HELPER();
   const resData = await eth_helper.ImportMnemonic(req.body.mnemonic);
 
   res.send({
@@ -23,7 +23,7 @@ exports.importMnemonic = async (req, res) => {
 };
 
 exports.importPrivateKey = async (req, res) => {
-  const eth_helper = new Eth_helper();
+  const eth_helper = new ETH_HELPER();
 
   res.send({
     code: 0,
@@ -32,7 +32,7 @@ exports.importPrivateKey = async (req, res) => {
 };
 
 exports.getBalance = async (req, res) => {
-  const eth_helper = new Eth_helper();
+  const eth_helper = new ETH_HELPER();
   const resData = await eth_helper.GetBalance(req.body.address);
 
   res.send({
@@ -42,7 +42,7 @@ exports.getBalance = async (req, res) => {
 };
 
 exports.getContractBalance = async (req, res) => {
-  const eth_helper = new Eth_helper();
+  const eth_helper = new ETH_HELPER();
   const resData = await eth_helper.GetContractBalance(req.body.contractAddress, req.body.address);
 
   res.send({
@@ -52,7 +52,7 @@ exports.getContractBalance = async (req, res) => {
 };
 
 exports.getTransactionInfoById = async (req, res) => {
-  const eth_helper = new Eth_helper();
+  const eth_helper = new ETH_HELPER();
 
   res.send({
     code: 0,
@@ -61,7 +61,7 @@ exports.getTransactionInfoById = async (req, res) => {
 };
 
 exports.getTransactionInfoByBlockNum = async (req, res) => {
-  const eth_helper = new Eth_helper();
+  const eth_helper = new ETH_HELPER();
 
   res.send({
     code: 0,
@@ -70,7 +70,7 @@ exports.getTransactionInfoByBlockNum = async (req, res) => {
 };
 
 exports.getLatestBlock = async (req, res) => {
-  const eth_helper = new Eth_helper();
+  const eth_helper = new ETH_HELPER();
 
   res.send({
     code: 0,
@@ -79,7 +79,7 @@ exports.getLatestBlock = async (req, res) => {
 };
 
 exports.sendTransaction = async (req, res) => {
-  const eth_helper = new Eth_helper();
+  const eth_helper = new ETH_HELPER();
   const resData = await eth_helper.SendTransaction(req.body.privateKey, req.body.toAddress, req.body.quantity);
 
   res.send({
@@ -89,7 +89,7 @@ exports.sendTransaction = async (req, res) => {
 };
 
 exports.sendContractTransaction = async (req, res) => {
-  const eth_helper = new Eth_helper();
+  const eth_helper = new ETH_HELPER();
   const resData = await eth_helper.SendContractTransaction(req.body.privateKey, req.body.contractAddress, req.body.toAddress, req.body.quantity);
 
   res.send({
@@ -99,7 +99,7 @@ exports.sendContractTransaction = async (req, res) => {
 };
 
 exports.getTransactionList = async (req, res) => {
-  const eth_helper = new Eth_helper();
+  const eth_helper = new ETH_HELPER();
   const resData = await eth_helper.GetTransactionList(req.body.address);
 
   res.send({

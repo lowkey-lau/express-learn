@@ -16,6 +16,7 @@ var userRouter = require("./routes/user");
 var addressRouter = require("./routes/address");
 var tronRouter = require("./routes/tron");
 var ethRouter = require("./routes/eth");
+var demoRouter = require("./routes/demo");
 
 var app = express();
 // view engine setup
@@ -44,16 +45,6 @@ app.use(express.static("./public"));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-app.use((req, res, next) => {
-  res.cc = (err, code = 1) => {
-    res.send({
-      code,
-      msg: err instanceof Error ? err.message : err,
-    });
-  };
-  next();
-});
-
 const jwtConfig = require("./jwt_config/index.js");
 const { expressjwt: jwt } = require("express-jwt");
 const Joi = require("joi");
@@ -75,6 +66,7 @@ app.use("/api/user", userRouter);
 app.use("/api/address", addressRouter);
 app.use("/api/tron", tronRouter);
 app.use("/api/eth", ethRouter);
+app.use("/api/demo", demoRouter);
 
 app.use((err, req, res, next) => {
   if (err instanceof Joi.ValidationError) return res.cc(err);
@@ -97,25 +89,24 @@ app.use(function (err, req, res, next) {
 });
 
 app.listen(3007, () => {
-  console.log("this run at 3007");
+  console.clear();
+  console.log("Project run at port 3007");
 
-  console.log(`
-  ______   ________  ______   _______   ________ 
- /      \ /        |/      \ /       \ /          /
-/$$$$$$  |$$$$$$$$//$$$$$$  |$$$$$$$  |$$$$$$$$/ 
-$$ \__$$/    $$ |  $$ |__$$ |$$ |__$$ |   $$ |   
-$$      \    $$ |  $$    $$ |$$    $$<    $$ |   
- $$$$$$  |  $$ |  $$$$$$$$ |$$$$$$$  |   $$ |   
-/   \__$$ |  $$ |  $$ |  $$ |$$ |$$ |     $$ |   
-$$ /  $$/   $$ |  $$ |  $$ |$$ | $$ |    $$ |   
- $$$$$$/    $$/   $$/   $$/ $$/   $$/    $$/    
-                                                 
-                                                 
-                                                 
-`);
+  //   console.log(`
+  //   ______   ________  ______   _______   ________
+  //  /      \ /        |/      \ /       \ /          /
+  // /$$$$$$  |$$$$$$$$//$$$$$$  |$$$$$$$  |$$$$$$$$/
+  // $$ \__$$/    $$ |  $$ |__$$ |$$ |__$$ |   $$ |
+  // $$      \    $$ |  $$    $$ |$$    $$<    $$ |
+  //  $$$$$$  |  $$ |  $$$$$$$$ |$$$$$$$  |   $$ |
+  // /   \__$$ |  $$ |  $$ |  $$ |$$ |$$ |     $$ |
+  // $$ /  $$/   $$ |  $$ |  $$ |$$ | $$ |    $$ |
+  //  $$$$$$/    $$/   $$/   $$/ $$/   $$/    $$/
 
-  const tron_helper = new Tron_helper();
-  tron_helper.ScanningBlock();
+  // `);
+
+  // const tron_helper = new Tron_helper();
+  // tron_helper.ScanningBlock();
 });
 
 module.exports = app;

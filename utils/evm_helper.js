@@ -11,7 +11,7 @@ const CHECK_API_URL = "https://api-sepolia.etherscan.io/api";
 const provider = "https://sepolia.infura.io/v3/a332c6aedf5f4a0da6b3e7ea57540c14";
 var web3Provider = new Web3.providers.HttpProvider(provider);
 
-class ETH_HELPER {
+class EVM_HELPER {
   web3;
 
   constructor() {
@@ -27,37 +27,30 @@ class ETH_HELPER {
     return this.MnemonicToAddressInfo(mnemonic);
   };
 
-  MnemonicToAddressInfo = async (mnemonic) => {
+  CreateMnemonic = async () => {
+    return bip39.generateMnemonic();
+  };
+
+  MnemonicToAddressInfo = async (mnemonic, order = 0) => {
     let seed = await bip39.mnemonicToSeed(mnemonic);
     let hdWallet = hdkey.fromMasterSeed(seed);
 
-    let wallets = [];
-
-    for (let i = 0; i < 1; i++) {
-      //4.生成钱包中在m/44'/60'/0'/0/i路径的keypair
-      let key = hdWallet.derivePath("m/44'/60'/0'/0/" + i);
-      //5.从keypair中获取私钥
-      console.log("私钥：" + util.bufferToHex(key._hdkey._privateKey));
-      //6.从keypair中获取公钥
-      console.log("公钥：" + util.bufferToHex(key._hdkey._publicKey));
-      //7.使用keypair中的公钥生成地址
-      let address = util.pubToAddress(key._hdkey._publicKey, true);
-      //编码地址
-      address = util.toChecksumAddress(`0x${address.toString("hex")}`);
-      console.log("地址：" + address, "\n");
-
-      wallets.push({
-        address,
-        privateKey: util.bufferToHex(key._hdkey._privateKey),
-        publicKey: util.bufferToHex(key._hdkey._publicKey),
-      });
-    }
+    let key = hdWallet.derivePath("m/44'/60'/0'/0/" + order);
+    //5.从keypair中获取私钥
+    // console.log("私钥：" + util.bufferToHex(key._hdkey._privateKey));
+    //6.从keypair中获取公钥
+    // console.log("公钥：" + util.bufferToHex(key._hdkey._publicKey));
+    //7.使用keypair中的公钥生成地址
+    let address = util.pubToAddress(key._hdkey._publicKey, true);
+    //编码地址
+    address = util.toChecksumAddress(`0x${address.toString("hex")}`);
+    // console.log("地址：" + address, "\n");
 
     return {
       mnemonic,
-      address: wallets[0].address,
-      privateKey: wallets[0].privateKey,
-      publicKey: wallets[0].publicKey,
+      address,
+      privateKey: util.bufferToHex(key._hdkey._privateKey),
+      publicKey: util.bufferToHex(key._hdkey._publicKey),
     };
   };
 
@@ -211,5 +204,5 @@ const toObject = (e) => {
 };
 
 module.exports = {
-  ETH_HELPER,
+  EVM_HELPER,
 };
