@@ -1,11 +1,5 @@
 "use strict";
 
-function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
-
-function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(source, true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(source).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
-
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
 var db = require("../db/index");
 
 var bcrypt = require("bcryptjs");
@@ -66,7 +60,7 @@ exports.register = function _callee(req, res, next) {
         case 17:
           _context.prev = 17;
           _context.t0 = _context["catch"](4);
-          return _context.abrupt("return", next(_context.t0));
+          return _context.abrupt("return", res.json(Result.fail(_context.t0)));
 
         case 20:
         case "end":
@@ -108,10 +102,11 @@ exports.login = function _callee2(req, res, next) {
 
         case 11:
           // if (results.status == 1) return res.cc("账号被冻结");
-          user = _objectSpread({}, accountRes[0]);
-          tokenStr = jwt.sign(user, jwtConfig.jwtSecretKey, {
-            expiresIn: "3h"
-          });
+          user = {
+            user_id: accountRes[0].id,
+            account: accountRes[0].account
+          };
+          tokenStr = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET);
           return _context2.abrupt("return", res.json(Result.success({
             user_id: accountRes[0].id,
             account: accountRes[0].account,
@@ -122,16 +117,15 @@ exports.login = function _callee2(req, res, next) {
           return _context2.abrupt("return", res.json(Result.fail("找不到该用户")));
 
         case 17:
-          _context2.next = 23;
+          _context2.next = 22;
           break;
 
         case 19:
           _context2.prev = 19;
           _context2.t0 = _context2["catch"](3);
-          console.log(_context2.t0);
           return _context2.abrupt("return", res.json(Result.fail(_context2.t0)));
 
-        case 23:
+        case 22:
         case "end":
           return _context2.stop();
       }

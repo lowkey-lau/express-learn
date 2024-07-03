@@ -3,9 +3,11 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.useSqlConnection = exports.useSqlQuery = void 0;
+exports.useVerifyToken = exports.useSqlConnection = exports.useSqlQuery = void 0;
 
 var db = require("../db/index");
+
+var jwt = require("jsonwebtoken");
 
 var useSqlQuery = function useSqlQuery(sql, params) {
   return new Promise(function (resolve, reject) {
@@ -85,3 +87,17 @@ var useSqlConnection = function useSqlConnection(sqls, params) {
 };
 
 exports.useSqlConnection = useSqlConnection;
+
+var useVerifyToken = function useVerifyToken(req, res, next) {
+  return new Promise(function (resolve, reject) {
+    var authHeader = req.headers["authorization"];
+    if (!authHeader) return res.status(403).send("无访问权限");
+    var token = authHeader && authHeader.split(" ")[1];
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, function (err, decoded) {
+      if (err) return reject(err);
+      resolve(decoded);
+    });
+  });
+};
+
+exports.useVerifyToken = useVerifyToken;

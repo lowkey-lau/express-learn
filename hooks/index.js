@@ -1,4 +1,5 @@
 const db = require("../db/index");
+const jwt = require("jsonwebtoken");
 
 export const useSqlQuery = (sql, params) => {
   return new Promise((resolve, reject) => {
@@ -71,6 +72,19 @@ export const useSqlConnection = (sqls, params) => {
             });
           });
       });
+    });
+  });
+};
+
+export const useVerifyToken = (req, res, next) => {
+  return new Promise((resolve, reject) => {
+    const authHeader = req.headers["authorization"];
+    if (!authHeader) return res.status(403).send("无访问权限");
+    const token = authHeader && authHeader.split(" ")[1];
+
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+      if (err) return reject(err);
+      resolve(decoded);
     });
   });
 };

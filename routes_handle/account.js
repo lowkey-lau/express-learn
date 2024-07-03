@@ -24,7 +24,7 @@ exports.register = async (req, res, next) => {
       return res.json(Result.fail("该用户已注册"));
     }
   } catch (error) {
-    return next(error);
+    return res.json(Result.fail(error));
   }
 };
 
@@ -41,10 +41,11 @@ exports.login = async (req, res, next) => {
       if (!compareResult) return res.json(Result.fail("密码不正确"));
       // if (results.status == 1) return res.cc("账号被冻结");
       const user = {
-        ...accountRes[0],
+        user_id: accountRes[0].id,
+        account: accountRes[0].account,
       };
 
-      const tokenStr = jwt.sign(user, jwtConfig.jwtSecretKey, { expiresIn: "3h" });
+      const tokenStr = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET);
       return res.json(
         Result.success({
           user_id: accountRes[0].id,
@@ -55,18 +56,7 @@ exports.login = async (req, res, next) => {
     } else {
       return res.json(Result.fail("找不到该用户"));
     }
-
-    // db.query(sql, encodeURIComponent(info.account), (err, results) => {
-    //   if (err) return res.cc(err);
-    //   const compareResult = bcrypt.compareSync(encodeURIComponent(info.password), results[0].password);
-    //   if (!compareResult) return res.cc("密码不正确");
-    //   if (results.status == 1) return res.cc("账号被冻结");
-    //   const user = {
-    //     ...results[0],
-    //   };
-    // }
   } catch (error) {
-    console.log(error);
     return res.json(Result.fail(error));
   }
 
@@ -74,7 +64,7 @@ exports.login = async (req, res, next) => {
   //     ...results[0],
   //   };
 
-  // const tokenStr = jwt.sign(user, jwtConfig.jwtSecretKey);
+  // const tokenStr = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET);
 
   // const sqls = [
   //   "select * from users_account where account = ?", // 查询是否有此账户
@@ -111,7 +101,7 @@ exports.login = async (req, res, next) => {
   //     ...results[0],
   //   };
 
-  // const tokenStr = jwt.sign(user, jwtConfig.jwtSecretKey);
+  // const tokenStr = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET);
 
   //   res.send({
   //     data: {

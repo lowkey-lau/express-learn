@@ -3,6 +3,7 @@ require("babel-register");
 
 var createError = require("http-errors");
 var express = require("express");
+// const dotenv = require("dotenv");
 var path = require("path");
 var cookieParser = require("cookie-parser");
 var logger = require("morgan");
@@ -12,6 +13,7 @@ var bodyParser = require("body-parser");
 var indexRouter = require("./routes/index");
 var usersRouter = require("./routes/users");
 var accountRouter = require("./routes/account");
+var assetsRouter = require("./routes/asset");
 var userRouter = require("./routes/user");
 var addressRouter = require("./routes/address");
 var tronRouter = require("./routes/tron");
@@ -19,6 +21,8 @@ var ethRouter = require("./routes/eth");
 var demoRouter = require("./routes/demo");
 
 var app = express();
+
+require("dotenv").config();
 // view engine setup
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "jade");
@@ -61,12 +65,14 @@ app.get("/", (req, res) => {
 
 app.use("/", indexRouter);
 app.use("/users", usersRouter);
-app.use("/api/account", accountRouter);
 app.use("/api/user", userRouter);
 app.use("/api/address", addressRouter);
 app.use("/api/tron", tronRouter);
 app.use("/api/eth", ethRouter);
 app.use("/api/demo", demoRouter);
+
+app.use("/api/account", accountRouter);
+app.use("/api/asset", assetsRouter);
 
 app.use((err, req, res, next) => {
   if (err instanceof Joi.ValidationError) return res.cc(err);
