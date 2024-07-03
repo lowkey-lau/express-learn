@@ -10,7 +10,9 @@ var jwtConfig = require("../jwt_config/index");
 
 var crypto = require("crypto");
 
-var Result = require("../common/ResultCode"); // const fs = require("fs");
+var Result = require("../common/ResultCode");
+
+var async = require("async"); // const fs = require("fs");
 // const { Tron_helper } = require("../utils/tron_helper");
 
 

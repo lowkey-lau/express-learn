@@ -4,6 +4,7 @@ const jwt = require("jsonwebtoken");
 const jwtConfig = require("../jwt_config/index");
 const crypto = require("crypto");
 const Result = require("../common/ResultCode");
+const async = require("async");
 // const fs = require("fs");
 // const { Tron_helper } = require("../utils/tron_helper");
 
@@ -21,6 +22,23 @@ exports.getUserAsset = async (req, res) => {
         where user_id = ?`,
       userRes.user_id
     );
+
+    // const res = new Promise.all(
+    //   assetsRes.map(async (item) => { }
+    // ))
+
+    // async.map(
+    //   [
+    //     fetch("https:data-api.binance.vision/api/v3/ticker/price?symbol=ETHUSDT").then((res) => res.json()),
+    //     fetch("https:data-api.binance.vision/api/v3/ticker/price?symbol=ETHUSDT").then((res) => res.json()),
+    //     fetch("https:data-api.binance.vision/api/v3/ticker/price?symbol=ETHUSDT").then((res) => res.json()),
+    //   ],
+    //   fs.stat,
+    //   function (err, results) {
+    //     console.log(results);
+    //     // results is now an array of stats for each file
+    //   }
+    // );
 
     // const res = assetsRes.map(async (item) => {
     //   return {

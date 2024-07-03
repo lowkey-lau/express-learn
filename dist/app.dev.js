@@ -19,6 +19,16 @@ var cors = require("cors");
 
 var bodyParser = require("body-parser");
 
+var db = require("./app/models");
+
+db.sequelize.sync({
+  alter: true
+}).then(function () {
+  console.log("Drop and re-sync db.");
+})["catch"](function (err) {
+  console.log("Failed to sync db: " + err.message);
+});
+
 var indexRouter = require("./routes/index");
 
 var usersRouter = require("./routes/users");

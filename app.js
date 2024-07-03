@@ -10,6 +10,16 @@ var logger = require("morgan");
 var cors = require("cors");
 var bodyParser = require("body-parser");
 
+const db = require("./app/models");
+db.sequelize
+  .sync({ alter: true })
+  .then(() => {
+    console.log("Drop and re-sync db.");
+  })
+  .catch((err) => {
+    console.log("Failed to sync db: " + err.message);
+  });
+
 var indexRouter = require("./routes/index");
 var usersRouter = require("./routes/users");
 var accountRouter = require("./routes/account");

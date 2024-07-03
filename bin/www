@@ -7,7 +7,7 @@
 var app = require("../app");
 var debug = require("debug")("express-learn:server");
 var http = require("http");
-const { Server } = require("socket.io");
+// const { Server } = require("socket.io");
 
 /**
  * Get port from environment and store in Express.
@@ -21,55 +21,55 @@ app.set("port", port);
  */
 
 var server = http.createServer(app);
-const io = new Server(server, {
-  connectionStateRecovery: {},
+// const io = new Server(server, {
+//   connectionStateRecovery: {},
 
-  cors: {
-    origin: true,
-    credentials: true,
-  },
-});
-var all_socket = {};
-io.on("connection", (socket) => {
-  let unique_id = new Date().getTime();
-  console.log(unique_id);
+//   cors: {
+//     origin: true,
+//     credentials: true,
+//   },
+// });
+// var all_socket = {};
+// io.on("connection", (socket) => {
+//   let unique_id = new Date().getTime();
+//   console.log(unique_id);
 
-  socket.unique_id = unique_id;
+//   socket.unique_id = unique_id;
 
-  socket.on("login", (msg) => {
-    socket.account = msg.account;
-    all_socket[socket.account] = all_socket[socket.account] ? all_socket[socket.account] : {};
-    all_socket[socket.account][socket.unique_id] = socket;
-  });
+//   socket.on("login", (msg) => {
+//     socket.account = msg.account;
+//     all_socket[socket.account] = all_socket[socket.account] ? all_socket[socket.account] : {};
+//     all_socket[socket.account][socket.unique_id] = socket;
+//   });
 
-  socket.on("disconnect", (msg) => {
-    try {
-      delete all_socket[socket.account][socket.unique_id];
-    } catch (error) {}
-  });
+//   socket.on("disconnect", (msg) => {
+//     try {
+//       delete all_socket[socket.account][socket.unique_id];
+//     } catch (error) {}
+//   });
 
-  socket.on("error", (msg) => {
-    try {
-      delete all_socket[socket.account][socket.unique_id];
-    } catch (error) {}
-  });
+//   socket.on("error", (msg) => {
+//     try {
+//       delete all_socket[socket.account][socket.unique_id];
+//     } catch (error) {}
+//   });
 
-  socket.on("send_message", (msg) => {
-    let to_account = msg.to_account;
-    if (all_socket[to_account]) {
-      for (let i in all_socket[to_account]) {
-        try {
-          all_socket[to_account][i].emit("send_message", msg.data);
-        } catch (error) {}
-      }
-      for (let i in all_socket[socket.account]) {
-        try {
-          all_socket[socket.account][i].emit("send_message", msg.data);
-        } catch (error) {}
-      }
-    }
-  });
-});
+//   socket.on("send_message", (msg) => {
+//     let to_account = msg.to_account;
+//     if (all_socket[to_account]) {
+//       for (let i in all_socket[to_account]) {
+//         try {
+//           all_socket[to_account][i].emit("send_message", msg.data);
+//         } catch (error) {}
+//       }
+//       for (let i in all_socket[socket.account]) {
+//         try {
+//           all_socket[socket.account][i].emit("send_message", msg.data);
+//         } catch (error) {}
+//       }
+//     }
+//   });
+// });
 
 /**
  * Listen on provided port, on all network interfaces.

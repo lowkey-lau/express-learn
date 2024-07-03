@@ -24,12 +24,12 @@ class Result {
   /**
    *
    * @param code {number} 返回code
-   * @param msg {string} 返回消息
+  //  * @param msg {string} 返回消息
    * @param data {any} 返回具体对象
    */
-  constructor(code, msg, data) {
+  constructor(code, data) {
     this.code = code;
-    this.msg = msg;
+    // this.msg = msg;
     this.data = data;
     this.time = Date.now();
   }
@@ -40,21 +40,21 @@ class Result {
    * @return {Result}
    */
   static success(data) {
-    return new Result(ResultCode.SUCCESS.code, ResultCode.SUCCESS.desc, data);
+    return new Result(ResultCode.SUCCESS.code, data);
   }
 
   /**
    * 失败
    */
   static fail(errData) {
-    return new Result(ResultCode.FAILED.code, ResultCode.FAILED.desc, errData);
+    return new Result(ResultCode.FAILED.code, errData);
   }
 
   /**
    * 参数校验失败
    */
   static validateFailed(param) {
-    return new Result(ResultCode.VALIDATE_FAILED.code, ResultCode.VALIDATE_FAILED.desc, param);
+    return new Result(ResultCode.VALIDATE_FAILED.code, param);
   }
 
   /**
@@ -62,7 +62,7 @@ class Result {
    * @param bizException {BizException} 业务异常
    */
   static bizFail(bizException) {
-    return new Result(bizException.code, bizException.msg, null);
+    return new Result(bizException.code, null);
   }
 }
 module.exports = Result;
