@@ -22,7 +22,8 @@ var bodyParser = require("body-parser");
 var db = require("./app/models");
 
 db.sequelize.sync({
-  alter: true
+  alter: true // force: true,
+
 }).then(function () {
   console.log("Drop and re-sync db.");
 })["catch"](function (err) {

@@ -1,7 +1,7 @@
 "use strict";
 
 module.exports = function (sequelize, Sequelize) {
-  return sequelize.define("asset_spot", {
+  return sequelize.define("asset_funding", {
     id: {
       type: Sequelize.INTEGER,
       autoIncrement: true,

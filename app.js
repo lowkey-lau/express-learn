@@ -12,7 +12,10 @@ var bodyParser = require("body-parser");
 
 const db = require("./app/models");
 db.sequelize
-  .sync({ alter: true })
+  .sync({
+    alter: true,
+    // force: true,
+  })
   .then(() => {
     console.log("Drop and re-sync db.");
   })

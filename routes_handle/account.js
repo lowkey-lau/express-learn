@@ -11,6 +11,8 @@ const { useSqlQuery, useSqlConnection } = require("../hooks/index");
 
 const db = require("../app/models");
 const Users = db.users;
+const AssetSpot = db.asset_spot;
+const Currency = db.currency;
 
 exports.register = async (req, res) => {
   const info = req.body;
@@ -19,13 +21,33 @@ exports.register = async (req, res) => {
   const tradePassword = bcrypt.hashSync(info.tradePassword, 10);
 
   try {
-    await Users.create({
-      account,
-      password,
-      tradePassword,
+    const result = await db.sequelize.transaction(async (t) => {
+      // const user = await Users.create(
+      //   {
+      //     account,
+      //     password,
+      //     tradePassword,
+      //   },
+      //   { transaction: t }
+      // );
+
+      const currency = await Currency.findAll();
+
+      await AssetSpot.bulkCreate(
+        currency.map((item) => {
+          return {
+            userId: 1,
+            currencyId: item.currencyId,
+            available: 0,
+            freeze: 0,
+          };
+        })
+      );
+
+      return currency;
     });
 
-    return res.json(Result.success("注册成功"));
+    return res.json(Result.success(result));
   } catch (error) {
     return res.json(Result.fail(error.message || "Some error occurred while creating the Tutorial."));
   }
